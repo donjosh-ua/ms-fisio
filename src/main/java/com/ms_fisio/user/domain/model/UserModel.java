@@ -10,6 +10,7 @@ import java.util.List;
 import com.ms_fisio.subscription.domain.model.SubscriptionModel;
 import com.ms_fisio.routine.domain.model.RoutineModel;
 import com.ms_fisio.patient.domain.model.PatientProfileModel;
+import com.ms_fisio.shared.domain.enums.AuthProvider;
 
 /**
  * User entity representing system users
@@ -38,8 +39,18 @@ public class UserModel {
     @Column(name = "profile_photo", length = 255)
     private String profilePhoto;
     
-    @Column(name = "password", length = 255, nullable = false)
+    @Column(name = "password", length = 255)
     private String password;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", nullable = false)
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+    
+    @Column(name = "google_id")
+    private String googleId;
+    
+    @Column(name = "email_verified", nullable = false)
+    private Boolean emailVerified = false;
     
     // Relationships
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
