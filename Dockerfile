@@ -1,4 +1,5 @@
-FROM amazoncorretto:24-alpine3.21-jdk
+# Stage 1: Build
+FROM amazoncorretto:17-alpine3.19-jdk AS builder
 
 WORKDIR /app
 
@@ -14,6 +15,16 @@ COPY src src
 
 RUN ./mvnw clean package -DskipTests
 
+# Stage 2: Runtime
+FROM amazoncorretto:17-alpine3.19-jdk
+
+WORKDIR /app
+
+# Install wget for health checks
+RUN apk add --no-cache wget
+
+COPY --from=builder /app/target/ms-fisio-*.jar app.jar  
+
 EXPOSE 8080
 
-CMD ["java", "-jar", "target/ms-fisio-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

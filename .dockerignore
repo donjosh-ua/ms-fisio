@@ -5,6 +5,9 @@ target/
 .vscode/
 .idea/
 *.iml
+.settings/
+.project
+.classpath
 
 # OS files
 .DS_Store
@@ -22,9 +25,21 @@ docker-compose.yml
 # Documentation
 README.md
 *.md
+docs/
 
 # Logs
 *.log
+logs/
 
 # Test files
 src/test/
+
+# Local configuration
+application-local.properties
+.env.local
+
+# Maven wrapper jar (keep scripts but not jar)
+.mvn/wrapper/maven-wrapper.jar
+
+# Scripts (they're for host usage)
+scripts/
