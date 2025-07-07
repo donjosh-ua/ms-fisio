@@ -61,6 +61,9 @@ public class UserModel {
     
     @OneToMany(mappedBy = "recipient", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<NotificationModel> notifications;
+
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<NotificationModel> sentNotifications;
     
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private PatientProfileModel patientProfile;

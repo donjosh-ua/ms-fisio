@@ -35,4 +35,8 @@ public class NotificationModel {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_id", nullable = false)
     private UserModel recipient;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = false)
+    private UserModel sender;
 }
