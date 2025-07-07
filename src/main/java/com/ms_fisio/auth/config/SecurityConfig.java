@@ -64,6 +64,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // Change allowed sources on prod
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
