@@ -18,7 +18,7 @@ import jakarta.validation.Valid;
  * Controller for account management endpoints
  */
 @RestController
-@RequestMapping("/api/account")
+@RequestMapping("/account")
 @RequiredArgsConstructor
 @Validated
 @Slf4j
