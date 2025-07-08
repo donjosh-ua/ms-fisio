@@ -31,6 +31,9 @@ public class ExerciseModel {
     @Column(name = "video_url", length = 255)
     private String videoUrl;
     
+    @Column(name = "video_id", length = 100)
+    private String videoId;
+    
     @Column(name = "sets")
     private Integer sets;
     

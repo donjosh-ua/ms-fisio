@@ -5,8 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 /**
  * Exercise moment entity for timestamped exercise events
  */
@@ -23,7 +21,7 @@ public class ExerciseMomentModel {
     private Long exerciseMomentId;
     
     @Column(name = "timestamp", nullable = false)
-    private LocalDateTime timestamp;
+    private String timestamp;
     
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;

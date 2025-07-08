@@ -1,6 +1,5 @@
-package com.ms_fisio.routine.domain.dto;
+package com.ms_fisio.routine.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,8 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-
-import com.ms_fisio.routine.dto.ExerciseDto;
 
 /**
  * DTO for creating or updating a routine
@@ -36,7 +33,6 @@ public class CreateRoutineRequest {
     @Min(value = 1, message = "Duration must be at least 1 minute")
     private Integer duration;
     
-    @JsonProperty("target_area_id")
     @NotNull(message = "Target area ID is required")
     private Long targetAreaId;
     

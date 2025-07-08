@@ -42,10 +42,12 @@ public class RoutineModel {
     
     @Column(name = "duration")
     private Integer duration;
-    
-    @Column(name = "weeks")
+     @Column(name = "weeks")
     private Integer weeks;
     
+    @Column(name = "favorite", nullable = false)
+    private Boolean favorite = false;
+
     // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
