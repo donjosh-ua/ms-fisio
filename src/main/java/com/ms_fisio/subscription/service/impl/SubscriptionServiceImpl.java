@@ -68,28 +68,27 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             String body = String.format("""
-                {
-                  "intent": "CAPTURE",
-                  "purchase_units": [{
-                    "amount": {
-                      "currency_code": "USD",
-                      "value": "%.2f"
-                    }
-                  }],
-                  "application_context": {
-                    "return_url": "http://localhost:8081/api/subscription/capture",
-                    "cancel_url": "http://localhost:8081/api/subscription/cancel"
-                  }
-                }
-            """, price);
+                        {
+                          "intent": "CAPTURE",
+                          "purchase_units": [{
+                            "amount": {
+                              "currency_code": "USD",
+                              "value": "%.2f"
+                            }
+                          }],
+                          "application_context": {
+                            "return_url": "http://localhost:8081/api/subscription/capture",
+                            "cancel_url": "http://localhost:8081/api/subscription/cancel"
+                          }
+                        }
+                    """, price);
 
             HttpEntity<String> entity = new HttpEntity<>(body, headers);
 
             ResponseEntity<String> response = restTemplate.postForEntity(
                     baseUrl + "/v2/checkout/orders",
                     entity,
-                    String.class
-            );
+                    String.class);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 log.error("Error en la respuesta de PayPal: {}", response.getBody());
@@ -109,7 +108,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
             if (approveLink.isEmpty()) {
                 log.error("No se encontró el link de aprobación en la respuesta de PayPal: {}", response.getBody());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No se pudo obtener el link de aprobación de PayPal");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("No se pudo obtener el link de aprobación de PayPal");
             }
             return ResponseEntity.ok(approveLink);
 
@@ -132,8 +132,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             ResponseEntity<String> response = restTemplate.postForEntity(
                     baseUrl + "/v2/checkout/orders/" + orderId + "/capture",
                     entity,
-                    String.class
-            );
+                    String.class);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 log.error("Error en la respuesta de PayPal: {}", response.getBody());
@@ -144,7 +143,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             JsonNode payerNode = json.get("payer");
             if (payerNode == null || payerNode.get("email_address") == null) {
                 log.error("No se encontró el email del pagador en la respuesta de PayPal: {}", response.getBody());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No se pudo obtener el email del pagador");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("No se pudo obtener el email del pagador");
             }
             String payerEmail = payerNode.get("email_address").asText();
 
@@ -183,13 +183,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         ResponseEntity<String> response = restTemplate.postForEntity(
                 baseUrl + "/v1/oauth2/token",
                 entity,
-                String.class
-        );
-    try {
-        JsonNode json = objectMapper.readTree(response.getBody());
-        return json.get("access_token").asText();
-    } catch (Exception e) {
-        throw new RuntimeException("No se pudo obtener el token de PayPal", e);
+                String.class);
+        try {
+            JsonNode json = objectMapper.readTree(response.getBody());
+            return json.get("access_token").asText();
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo obtener el token de PayPal", e);
+        }
     }
-}
 }
