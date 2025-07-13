@@ -16,6 +16,7 @@ public class PatientProfileResponse {
     private Long patientProfileId;
     private Long sessionId;
     private String accessCode;
+    private PatientProfileDTO profile; // For profile retrieval responses
     
     public PatientProfileResponse(boolean success, String message) {
         this.success = success;
@@ -23,7 +24,11 @@ public class PatientProfileResponse {
     }
     
     public static PatientProfileResponse success(String message, Long patientProfileId, Long sessionId, String accessCode) {
-        return new PatientProfileResponse(true, message, patientProfileId, sessionId, accessCode);
+        return new PatientProfileResponse(true, message, patientProfileId, sessionId, accessCode, null);
+    }
+    
+    public static PatientProfileResponse success(String message, Long patientProfileId, Long sessionId, String accessCode, PatientProfileDTO profile) {
+        return new PatientProfileResponse(true, message, patientProfileId, sessionId, accessCode, profile);
     }
     
     public static PatientProfileResponse error(String message) {
