@@ -20,7 +20,7 @@ import java.util.List;
  * Controller for patient endpoints
  */
 @RestController
-@RequestMapping("/api/patient")
+@RequestMapping("/patient")
 @RequiredArgsConstructor
 @Validated
 @Slf4j
