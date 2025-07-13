@@ -1,6 +1,5 @@
 package com.ms_fisio.subscription.service.impl;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -60,7 +59,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
 
             PlanTypeModel plan = planOpt.get();
-            BigDecimal price = plan.getPrice();
+            Double price = plan.getPrice();
             String accessToken = getAccessToken();
 
             HttpHeaders headers = new HttpHeaders();
