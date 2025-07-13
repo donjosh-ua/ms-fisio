@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -22,10 +23,12 @@ public class PatientProfileDTO {
     private String sex;
     private String email;
     private String priorSurgeries;
-    private LocalDate painDate;
+    private LocalDate painStartDate;
     private Integer painLevel;
-    private String diagnosis;
+    private String medicalDiagnosis;
     private Long userId;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
     // Associated data
     private List<ChronicDiseaseDTO> chronicDiseases;

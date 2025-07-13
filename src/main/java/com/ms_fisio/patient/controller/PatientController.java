@@ -101,6 +101,37 @@ public class PatientController {
     }
     
     /**
+     * Get a specific patient profile by ID
+     */
+    @GetMapping("/profile/{id}")
+    public ResponseEntity<PatientProfileResponse> getPatientProfile(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        
+        Long userId = extractUserIdFromToken(authorizationHeader);
+        PatientProfileResponse response = patientService.getPatientProfile(id, userId);
+        
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    /**
+     * Get all patient profiles for the authenticated user
+     */
+    @GetMapping("/profiles")
+    public ResponseEntity<List<PatientProfileDTO>> getAllPatientProfiles(
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        
+        Long userId = extractUserIdFromToken(authorizationHeader);
+        List<PatientProfileDTO> profiles = patientService.getAllPatientProfiles(userId);
+        
+        return ResponseEntity.ok(profiles);
+    }
+
+    /**
      * Extract user ID from JWT token (mock for development)
      */
     private Long extractUserIdFromToken(String authorizationHeader) {

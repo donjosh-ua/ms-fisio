@@ -307,4 +307,105 @@ public class PatientService {
     private String generateSessionAccessCode() {
         return "PAT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
+    
+    /**
+     * Get a specific patient profile by ID
+     */
+    public PatientProfileResponse getPatientProfile(Long patientProfileId, Long userId) {
+        try {
+            log.info("Fetching patient profile with ID: {} for user: {}", patientProfileId, userId);
+            
+            PatientProfileModel patientProfile = patientProfileRepository.findById(patientProfileId)
+                    .orElseThrow(() -> new IllegalArgumentException("Patient profile not found with ID: " + patientProfileId));
+            
+            // Check if user has access to this profile
+            if (!patientProfile.getUser().getUserId().equals(userId)) {
+                throw new UnauthorizedAccessException("User does not have access to this patient profile");
+            }
+            
+            // Convert to DTO
+            PatientProfileDTO profileDTO = convertToPatientProfileDTO(patientProfile);
+            
+            return PatientProfileResponse.success(
+                "Patient profile retrieved successfully", 
+                profileDTO.getPatientProfileId(),
+                null, // No session creation for retrieval
+                null, // No access code for retrieval
+                profileDTO
+            );
+            
+        } catch (UnauthorizedAccessException e) {
+            log.error("Unauthorized access to patient profile: {}", e.getMessage());
+            return PatientProfileResponse.error("Unauthorized access to patient profile");
+        } catch (Exception e) {
+            log.error("Error fetching patient profile: {}", e.getMessage());
+            return PatientProfileResponse.error("Error retrieving patient profile: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Get all patient profiles for a user
+     */
+    public List<PatientProfileDTO> getAllPatientProfiles(Long userId) {
+        try {
+            log.info("Fetching all patient profiles for user: {}", userId);
+            
+            List<PatientProfileModel> profiles = patientProfileRepository.findByUser_UserId(userId);
+            
+            return profiles.stream()
+                    .map(this::convertToPatientProfileDTO)
+                    .toList();
+                    
+        } catch (Exception e) {
+            log.error("Error fetching patient profiles: {}", e.getMessage());
+            return List.of();
+        }
+    }
+    
+    /**
+     * Convert PatientProfileModel to PatientProfileDTO
+     */
+    private PatientProfileDTO convertToPatientProfileDTO(PatientProfileModel profile) {
+        PatientProfileDTO dto = new PatientProfileDTO();
+        dto.setPatientProfileId(profile.getPatientProfileId());
+        dto.setFullName(""); // PatientProfileModel doesn't have fullName field
+        dto.setIdNumber(profile.getIdNumber());
+        dto.setPhone(profile.getPhone());
+        dto.setAge(profile.getAge());
+        dto.setSex(profile.getSex());
+        dto.setEmail(""); // PatientProfileModel doesn't have email field
+        dto.setPriorSurgeries(profile.getPriorSurgeries());
+        dto.setPainStartDate(profile.getPainDate()); // Using painDate field
+        dto.setPainLevel(profile.getPainLevel());
+        dto.setMedicalDiagnosis(profile.getDiagnosis()); // Using diagnosis field
+        dto.setUserId(profile.getUser().getUserId());
+        dto.setCreatedAt(null); // PatientProfileModel doesn't have createdAt field
+        dto.setUpdatedAt(null); // PatientProfileModel doesn't have updatedAt field
+        
+        // Convert chronic diseases
+        List<ChronicDiseaseDTO> diseases = profile.getPatientDiseases().stream()
+                .map(pd -> new ChronicDiseaseDTO(
+                    pd.getChronicDisease().getChronicDiseaseId(),
+                    pd.getChronicDisease().getName()))
+                .toList();
+        dto.setChronicDiseases(diseases);
+        
+        // Convert affected zones
+        List<AffectedZoneDTO> zones = profile.getPatientZones().stream()
+                .map(pz -> new AffectedZoneDTO(
+                    pz.getAffectedZone().getAffectedZoneId(),
+                    pz.getAffectedZone().getName()))
+                .toList();
+        dto.setAffectedZones(zones);
+        
+        // Convert lesion types
+        List<LesionTypeDTO> lesions = profile.getPatientLesions().stream()
+                .map(pl -> new LesionTypeDTO(
+                    pl.getLesionType().getLesionTypeId(),
+                    pl.getLesionType().getName()))
+                .toList();
+        dto.setLesionTypes(lesions);
+        
+        return dto;
+    }
 }
