@@ -15,16 +15,16 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Slf4j
 public class VideoController {
-    
+
     private final VideoService videoService;
-    
+
     /**
      * Get all uploaded/linked videos
      */
     @GetMapping
     public ResponseEntity<VideosResponse> getAllVideos() {
         log.info("Request to get all videos");
-        
+
         VideosResponse response = videoService.getAllVideos();
         return ResponseEntity.ok(response);
     }

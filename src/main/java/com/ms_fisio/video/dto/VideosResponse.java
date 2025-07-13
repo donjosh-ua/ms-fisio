@@ -13,6 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VideosResponse {
-    
+
     private List<VideoDto> videos;
 }
