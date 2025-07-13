@@ -57,4 +57,7 @@ public class PatientProfileRequest {
     
     @Size(max = 1000, message = "Medical diagnosis must not exceed 1000 characters")
     private String medicalDiagnosis;
+    
+    @NotNull(message = "Routine ID is required")
+    private Long routineId;
 }

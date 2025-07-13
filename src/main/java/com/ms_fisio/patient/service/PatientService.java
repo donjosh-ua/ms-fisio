@@ -1,14 +1,13 @@
 package com.ms_fisio.patient.service;
 
 import com.ms_fisio.patient.domain.dto.*;
-import com.ms_fisio.patient.domain.dto.ChronicDiseaseDTO;
-import com.ms_fisio.patient.domain.dto.AffectedZoneDTO;
-import com.ms_fisio.patient.domain.dto.LesionTypeDTO;
 import com.ms_fisio.patient.domain.model.*;
 import com.ms_fisio.patient.repository.*;
 import com.ms_fisio.patient.exception.UnauthorizedAccessException;
 import com.ms_fisio.routine.dto.RoutinesResponse;
 import com.ms_fisio.routine.service.RoutineService;
+import com.ms_fisio.routine.repository.RoutineRepository;
+import com.ms_fisio.routine.domain.model.RoutineModel;
 import com.ms_fisio.session.domain.model.RoutineSessionModel;
 import com.ms_fisio.session.repository.RoutineSessionRepository;
 import com.ms_fisio.user.domain.model.UserModel;
@@ -40,6 +39,7 @@ public class PatientService {
     private final PatientRoutineRepository patientRoutineRepository;
     private final UserRepository userRepository;
     private final RoutineService routineService;
+    private final RoutineRepository routineRepository;
     private final RoutineSessionRepository routineSessionRepository;
     
     /**
@@ -139,7 +139,7 @@ public class PatientService {
             String accessCode = null;
             
             if (isNewProfile) {
-                RoutineSessionModel session = createPatientSession();
+                RoutineSessionModel session = createPatientSession(request.getRoutineId());
                 sessionId = session.getRoutineSessionId();
                 accessCode = session.getAccessCode();
                 log.info("Created session {} with access code {} for new patient profile", sessionId, accessCode);
@@ -203,6 +203,14 @@ public class PatientService {
                     .orElseThrow(() -> new RuntimeException("Chronic disease not found: " + diseaseId));
             
             PatientDiseaseModel patientDisease = new PatientDiseaseModel();
+            
+            // Create and set the composite key
+            PatientDiseaseModel.PatientDiseaseId compositeKey = new PatientDiseaseModel.PatientDiseaseId();
+            compositeKey.setPatientProfileId(patientProfile.getPatientProfileId());
+            compositeKey.setChronicDiseaseId(disease.getChronicDiseaseId());
+            patientDisease.setPatientDiseaseId(compositeKey);
+            
+            // Set the relationships
             patientDisease.setPatientProfile(patientProfile);
             patientDisease.setChronicDisease(disease);
             patientDiseaseRepository.save(patientDisease);
@@ -224,6 +232,14 @@ public class PatientService {
                     .orElseThrow(() -> new RuntimeException("Affected zone not found: " + zoneId));
             
             PatientZoneModel patientZone = new PatientZoneModel();
+            
+            // Create and set the composite key
+            PatientZoneModel.PatientZoneId compositeKey = new PatientZoneModel.PatientZoneId();
+            compositeKey.setPatientProfileId(patientProfile.getPatientProfileId());
+            compositeKey.setAffectedZoneId(zone.getAffectedZoneId());
+            patientZone.setPatientZoneId(compositeKey);
+            
+            // Set the relationships
             patientZone.setPatientProfile(patientProfile);
             patientZone.setAffectedZone(zone);
             patientZoneRepository.save(patientZone);
@@ -245,6 +261,14 @@ public class PatientService {
                     .orElseThrow(() -> new RuntimeException("Lesion type not found: " + lesionId));
             
             PatientLesionModel patientLesion = new PatientLesionModel();
+            
+            // Create and set the composite key
+            PatientLesionModel.PatientLesionId compositeKey = new PatientLesionModel.PatientLesionId();
+            compositeKey.setPatientProfileId(patientProfile.getPatientProfileId());
+            compositeKey.setLesionTypeId(lesionType.getLesionTypeId());
+            patientLesion.setPatientLesionId(compositeKey);
+            
+            // Set the relationships
             patientLesion.setPatientProfile(patientProfile);
             patientLesion.setLesionType(lesionType);
             patientLesionRepository.save(patientLesion);
@@ -254,8 +278,13 @@ public class PatientService {
     /**
      * Create a routine session for a patient profile
      */
-    private RoutineSessionModel createPatientSession() {
+    private RoutineSessionModel createPatientSession(Long routineId) {
         RoutineSessionModel session = new RoutineSessionModel();
+        
+        // Set the routine for the session
+        RoutineModel routine = routineRepository.findById(routineId)
+                .orElseThrow(() -> new IllegalArgumentException("Routine not found with ID: " + routineId));
+        session.setRoutine(routine);
         
         // Generate unique access code
         String accessCode = generateSessionAccessCode();
@@ -263,11 +292,11 @@ public class PatientService {
         
         // Set session timestamps
         session.setStartDatetime(LocalDateTime.now());
-        // Note: routine field can be null for now, as this is for patient profile creation
         // End datetime will be set when session is actually started
         
         session = routineSessionRepository.save(session);
-        log.info("Created session with ID: {} and access code: {}", session.getRoutineSessionId(), accessCode);
+        log.info("Created session with ID: {} and access code: {} for routine: {}", 
+                 session.getRoutineSessionId(), accessCode, routine.getName());
         
         return session;
     }
