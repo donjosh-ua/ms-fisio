@@ -189,13 +189,11 @@ public class RoutineService {
      */
     public RoutinesResponse getAllRoutines(Long userId) {
         log.info("Fetching all routines for user: {}", userId);
-        
+
         try {
-            UserModel user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            List<RoutineModel> routines = user.getCreatedRoutines();
-            
+            // Fetch routines directly by user ID to avoid lazy loading issues
+            List<RoutineModel> routines = routineRepository.findByCreatedByUser_UserId(userId);
+
             List<RoutineSummaryDto> routineSummaries = routines.stream()
                     .map(routine -> new RoutineSummaryDto(
                             routine.getRoutineId().toString(),
@@ -205,9 +203,9 @@ public class RoutineService {
                             routine.getDifficulty()
                     ))
                     .toList();
-            
+
             return new RoutinesResponse(routineSummaries);
-            
+
         } catch (Exception e) {
             log.error("Error fetching routines: {}", e.getMessage());
             return new RoutinesResponse(List.of());
