@@ -3,8 +3,8 @@ package com.ms_fisio.user.mapper;
 import java.util.List;
 
 import org.mapstruct.Mapper;
-import org.mapstruct.ReportingPolicy;
 import org.mapstruct.MappingConstants.ComponentModel;
+import org.mapstruct.ReportingPolicy;
 
 import com.ms_fisio.user.domain.dto.NotificationDTO;
 import com.ms_fisio.user.domain.model.NotificationModel;

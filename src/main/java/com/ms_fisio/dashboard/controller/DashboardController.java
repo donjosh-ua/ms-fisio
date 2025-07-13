@@ -22,23 +22,23 @@ import jakarta.validation.Valid;
 @Validated
 @Slf4j
 public class DashboardController {
-    
+
     private final DashboardService dashboardService;
     private final JwtService jwtService;
-    
+
     /**
      * Get dashboard information
      */
     @GetMapping("/info")
     public ResponseEntity<DashboardInfoResponse> getDashboardInfo(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        
+
         Long userId = extractUserIdFromToken(authorizationHeader);
         DashboardInfoResponse response = dashboardService.getDashboardInfo(userId);
-        
+
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * Request analysis charts
      */
@@ -46,13 +46,13 @@ public class DashboardController {
     public ResponseEntity<ChartsResponse> getCharts(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody ChartRequest request) {
-        
+
         Long userId = extractUserIdFromToken(authorizationHeader);
         ChartsResponse response = dashboardService.getCharts(request.getChartType(), userId);
-        
+
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * Extract user ID from JWT token (mock for development)
      */
@@ -61,7 +61,7 @@ public class DashboardController {
         if (authorizationHeader == null || authorizationHeader.isEmpty()) {
             return 1L; // Default test user ID
         }
-        
+
         try {
             String token = authorizationHeader.replace("Bearer ", "");
             return jwtService.extractUserId(token);
