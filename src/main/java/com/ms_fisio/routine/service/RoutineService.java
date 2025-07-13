@@ -59,12 +59,7 @@ public class RoutineService {
                     .orElseThrow(() -> new RuntimeException("Target area not found"));
             
             // Parse difficulty
-            Difficulty difficulty;
-            try {
-                difficulty = Difficulty.valueOf(request.getDifficulty().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Invalid difficulty level");
-            }
+            Integer difficulty = request.getDifficulty();
             
             // Create routine
             RoutineModel routine = new RoutineModel();
@@ -72,7 +67,6 @@ public class RoutineService {
             routine.setCategory(request.getCategory());
             routine.setDescription(request.getDescription());
             routine.setDifficulty(difficulty);
-            routine.setFavorite(Boolean.TRUE.equals(request.getFavorite()));
             routine.setDuration(request.getDuration());
             routine.setWeeks(request.getWeeks());
             routine.setCreatedByUser(user);
@@ -124,19 +118,13 @@ public class RoutineService {
                     .orElseThrow(() -> new RuntimeException("Target area not found"));
             
             // Parse difficulty
-            Difficulty difficulty;
-            try {
-                difficulty = Difficulty.valueOf(request.getDifficulty().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Invalid difficulty level");
-            }
+            Integer difficulty = request.getDifficulty();
             
             // Update routine
             routine.setName(request.getName());
             routine.setCategory(request.getCategory());
             routine.setDescription(request.getDescription());
             routine.setDifficulty(difficulty);
-            routine.setFavorite(Boolean.TRUE.equals(request.getFavorite()));
             routine.setDuration(request.getDuration());
             routine.setWeeks(request.getWeeks());
             routine.setObjectiveArea(targetArea);
@@ -214,8 +202,7 @@ public class RoutineService {
                             routine.getName(),
                             routine.getCategory(),
                             routine.getDuration(),
-                            routine.getDifficulty().name().toLowerCase(),
-                            routine.getFavorite()
+                            routine.getDifficulty()
                     ))
                     .toList();
             
