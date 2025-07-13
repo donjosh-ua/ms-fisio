@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VideoDto {
-    
+
     @JsonProperty("video_id")
     private String videoId;
     private String url;
