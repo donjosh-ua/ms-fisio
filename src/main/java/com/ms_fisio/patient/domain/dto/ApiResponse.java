@@ -5,12 +5,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO for lesion type information
+ * DTO for API response messages
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LesionTypeDTO {
-    private Long id;
-    private String name;
+public class ApiResponse {
+    private boolean success;
+    private String message;
 }

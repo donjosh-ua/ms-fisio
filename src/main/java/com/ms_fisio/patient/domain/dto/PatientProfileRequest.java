@@ -9,15 +9,14 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * DTO for updating an existing patient profile
+ * DTO for creating or updating patient profile
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdatePatientProfileRequest {
+public class PatientProfileRequest {
     
-    @NotNull(message = "Patient profile ID is required for update")
-    private Long patientProfileId;
+    private Long id; // For editing existing profile
     
     @NotBlank(message = "Full name is required")
     @Size(max = 100, message = "Full name must not exceed 100 characters")
