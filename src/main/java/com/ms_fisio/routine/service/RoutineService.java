@@ -59,12 +59,7 @@ public class RoutineService {
                     .orElseThrow(() -> new RuntimeException("Target area not found"));
             
             // Parse difficulty
-            Difficulty difficulty;
-            try {
-                difficulty = Difficulty.valueOf(request.getDifficulty().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Invalid difficulty level");
-            }
+            Integer difficulty = request.getDifficulty();
             
             // Create routine
             RoutineModel routine = new RoutineModel();
@@ -72,7 +67,6 @@ public class RoutineService {
             routine.setCategory(request.getCategory());
             routine.setDescription(request.getDescription());
             routine.setDifficulty(difficulty);
-            routine.setFavorite(Boolean.TRUE.equals(request.getFavorite()));
             routine.setDuration(request.getDuration());
             routine.setWeeks(request.getWeeks());
             routine.setCreatedByUser(user);
@@ -124,19 +118,13 @@ public class RoutineService {
                     .orElseThrow(() -> new RuntimeException("Target area not found"));
             
             // Parse difficulty
-            Difficulty difficulty;
-            try {
-                difficulty = Difficulty.valueOf(request.getDifficulty().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new RuntimeException("Invalid difficulty level");
-            }
+            Integer difficulty = request.getDifficulty();
             
             // Update routine
             routine.setName(request.getName());
             routine.setCategory(request.getCategory());
             routine.setDescription(request.getDescription());
             routine.setDifficulty(difficulty);
-            routine.setFavorite(Boolean.TRUE.equals(request.getFavorite()));
             routine.setDuration(request.getDuration());
             routine.setWeeks(request.getWeeks());
             routine.setObjectiveArea(targetArea);
@@ -201,26 +189,23 @@ public class RoutineService {
      */
     public RoutinesResponse getAllRoutines(Long userId) {
         log.info("Fetching all routines for user: {}", userId);
-        
+
         try {
-            UserModel user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            List<RoutineModel> routines = user.getCreatedRoutines();
-            
+            // Fetch routines directly by user ID to avoid lazy loading issues
+            List<RoutineModel> routines = routineRepository.findByCreatedByUser_UserId(userId);
+
             List<RoutineSummaryDto> routineSummaries = routines.stream()
                     .map(routine -> new RoutineSummaryDto(
                             routine.getRoutineId().toString(),
                             routine.getName(),
                             routine.getCategory(),
                             routine.getDuration(),
-                            routine.getDifficulty().name().toLowerCase(),
-                            routine.getFavorite()
+                            routine.getDifficulty()
                     ))
                     .toList();
-            
+
             return new RoutinesResponse(routineSummaries);
-            
+
         } catch (Exception e) {
             log.error("Error fetching routines: {}", e.getMessage());
             return new RoutinesResponse(List.of());

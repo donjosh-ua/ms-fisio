@@ -25,8 +25,8 @@ public class CreateRoutineRequest {
     
     private String description;
     
-    @NotBlank(message = "Difficulty is required")
-    private String difficulty;
+    @NotNull(message = "Difficulty is required")
+    private Integer difficulty;
     
     private Boolean favorite = false;
     

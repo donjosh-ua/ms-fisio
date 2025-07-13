@@ -16,6 +16,5 @@ public class RoutineSummaryDto {
     private String name;
     private String category;
     private Integer duration;
-    private String difficulty;
-    private Boolean favorite;
+    private Integer difficulty;
 }

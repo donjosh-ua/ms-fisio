@@ -36,18 +36,15 @@ public class RoutineModel {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     
-    @Enumerated(EnumType.STRING)
-    @Column(name = "difficulty", length = 20, nullable = false)
-    private Difficulty difficulty;
+    @Column(name = "difficulty", nullable = false)
+    private Integer difficulty;
     
     @Column(name = "duration")
     private Integer duration;
-     @Column(name = "weeks")
+
+    @Column(name = "weeks")
     private Integer weeks;
     
-    @Column(name = "favorite", nullable = false)
-    private Boolean favorite = false;
-
     // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
