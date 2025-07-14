@@ -95,9 +95,7 @@ public class SessionService {
             routineDto.setCategory(session.getRoutine().getObjectiveArea() != null ? 
                                  session.getRoutine().getObjectiveArea().getName() : "");
             routineDto.setDuration(session.getRoutine().getDuration());
-            routineDto.setDifficulty(session.getRoutine().getDifficulty() != null ? 
-                                   session.getRoutine().getDifficulty().name().toLowerCase() : "");
-            routineDto.setFavorite(false); // Default value, can be enhanced later
+            routineDto.setDifficulty(session.getRoutine().getDifficulty());
             dto.setRoutine(routineDto);
         }
         
@@ -149,7 +147,7 @@ public class SessionService {
             // For now, return mock data - later this will call external backend
             List<ExercisePerformanceDTO> mockPerformanceData = createMockExercisePerformance(session.getRoutineSessionId());
             
-            // TODO: Replace with actual external API call
+            // Future implementation will replace mock data with actual external API call:
             // String url = exerciseAnalysisUrl + "/performance/" + accessCode;
             // ExercisePerformanceDTO[] response = restTemplate.getForObject(url, ExercisePerformanceDTO[].class);
             // return Arrays.asList(response);
