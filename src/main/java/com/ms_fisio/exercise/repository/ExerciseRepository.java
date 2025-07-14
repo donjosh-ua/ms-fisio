@@ -2,6 +2,7 @@ package com.ms_fisio.exercise.repository;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import com.ms_fisio.exercise.domain.model.ExerciseModel;
@@ -14,9 +15,12 @@ import java.util.Optional;
  */
 @Repository
 public interface ExerciseRepository extends JpaRepository<ExerciseModel, Long> {
-    @EntityGraph(attributePaths = {"exerciseMoments", "objectiveArea"})
+
+    @NonNull
+    @EntityGraph(attributePaths = { "exerciseMoments", "objectiveArea" })
     List<ExerciseModel> findAll();
 
-    @EntityGraph(attributePaths = {"exerciseMoments", "objectiveArea"})
-    Optional<ExerciseModel> findById(Long id);
+    @NonNull
+    @EntityGraph(attributePaths = { "exerciseMoments", "objectiveArea" })
+    Optional<ExerciseModel> findById(@NonNull Long id);
 }

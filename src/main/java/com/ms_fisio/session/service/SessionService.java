@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,15 +20,13 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class SessionService {
-    
+
     private final RoutineSessionRepository routineSessionRepository;
     private final FeedbackRepository feedbackRepository;
-    private final ExercisePerformanceRepository exercisePerformanceRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
-    
+
     @Value("${app.external.exercise-analysis.url:http://localhost:8082/api/exercise-analysis}")
     private String exerciseAnalysisUrl;
-    
+
     /**
      * Get a session by access code (only if not expired)
      */
@@ -37,21 +34,22 @@ public class SessionService {
     public SessionResponse getSessionByAccessCode(String accessCode) {
         try {
             log.info("Fetching session with access code: {}", accessCode);
-            
+
             LocalDateTime now = LocalDateTime.now();
             RoutineSessionModel session = routineSessionRepository.findActiveByAccessCode(accessCode, now)
-                    .orElseThrow(() -> new IllegalArgumentException("Session not found or expired with access code: " + accessCode));
-            
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Session not found or expired with access code: " + accessCode));
+
             RoutineSessionDTO sessionDTO = convertToDTO(session);
-            
+
             return SessionResponse.success("Session retrieved successfully", sessionDTO);
-            
+
         } catch (Exception e) {
             log.error("Error fetching session: {}", e.getMessage());
             return SessionResponse.error("Error retrieving session: " + e.getMessage());
         }
     }
-    
+
     /**
      * Get all active sessions for a user (called from dashboard)
      */
@@ -59,20 +57,20 @@ public class SessionService {
     public List<RoutineSessionDTO> getAllActiveSessionsForUser(Long userId) {
         try {
             log.info("Fetching all active sessions for user: {}", userId);
-            
+
             LocalDateTime now = LocalDateTime.now();
             List<RoutineSessionModel> sessions = routineSessionRepository.findActiveSessionsByUserId(userId, now);
-            
+
             return sessions.stream()
                     .map(this::convertToDTO)
                     .toList();
-                    
+
         } catch (Exception e) {
             log.error("Error fetching user sessions: {}", e.getMessage());
             return List.of();
         }
     }
-    
+
     /**
      * Convert RoutineSessionModel to RoutineSessionDTO
      */
@@ -82,27 +80,28 @@ public class SessionService {
         dto.setAccessCode(session.getAccessCode());
         dto.setStartDatetime(session.getStartDatetime());
         dto.setEndDatetime(session.getEndDatetime());
-        
+
         // Calculate if session is active
         boolean isActive = session.getEndDatetime() == null || session.getEndDatetime().isAfter(LocalDateTime.now());
         dto.setActive(isActive);
-        
+
         // Convert routine to RoutineSummaryDto
         if (session.getRoutine() != null) {
             RoutineSummaryDto routineDto = new RoutineSummaryDto();
             routineDto.setId(session.getRoutine().getRoutineId().toString());
             routineDto.setName(session.getRoutine().getName());
-            routineDto.setCategory(session.getRoutine().getObjectiveArea() != null ? 
-                                 session.getRoutine().getObjectiveArea().getName() : "");
+            routineDto.setCategory(
+                    session.getRoutine().getObjectiveArea() != null ? session.getRoutine().getObjectiveArea().getName()
+                            : "");
             routineDto.setDuration(session.getRoutine().getDuration());
-            routineDto.setDifficulty(session.getRoutine().getDifficulty() != null ? 
-                                   session.getRoutine().getDifficulty() : 0);
+            routineDto.setDifficulty(
+                    session.getRoutine().getDifficulty() != null ? session.getRoutine().getDifficulty() : 0);
             dto.setRoutine(routineDto);
         }
-        
+
         return dto;
     }
-    
+
     /**
      * Send feedback using access code
      */
@@ -110,29 +109,30 @@ public class SessionService {
     public SessionResponse sendFeedback(SendFeedbackRequest request) {
         try {
             log.info("Sending feedback for access code: {}", request.getAccessCode());
-            
+
             // Find session by access code (can be expired for feedback)
             RoutineSessionModel session = routineSessionRepository.findByAccessCode(request.getAccessCode())
-                    .orElseThrow(() -> new IllegalArgumentException("Session not found with access code: " + request.getAccessCode()));
-            
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Session not found with access code: " + request.getAccessCode()));
+
             // Create and save feedback
             FeedbackModel feedback = new FeedbackModel();
             feedback.setFeedback(request.getFeedback());
             feedback.setCalification(request.getCalification());
             feedback.setRoutineSession(session);
-            
+
             feedback = feedbackRepository.save(feedback);
-            log.info("Feedback saved with ID: {} and calification: {} for session: {}", 
-                     feedback.getFeedbackId(), feedback.getCalification(), session.getRoutineSessionId());
-            
+            log.info("Feedback saved with ID: {} and calification: {} for session: {}",
+                    feedback.getFeedbackId(), feedback.getCalification(), session.getRoutineSessionId());
+
             return SessionResponse.success("Feedback sent successfully", null);
-            
+
         } catch (Exception e) {
             log.error("Error sending feedback: {}", e.getMessage());
             return SessionResponse.error("Error sending feedback: " + e.getMessage());
         }
     }
-    
+
     /**
      * Get exercise performance data (connects to external backend)
      */
@@ -140,65 +140,64 @@ public class SessionService {
     public List<ExercisePerformanceDTO> getExercisePerformance(String accessCode) {
         try {
             log.info("Fetching exercise performance for access code: {}", accessCode);
-            
+
             // Find session by access code
             RoutineSessionModel session = routineSessionRepository.findByAccessCode(accessCode)
-                    .orElseThrow(() -> new IllegalArgumentException("Session not found with access code: " + accessCode));
-            
+                    .orElseThrow(
+                            () -> new IllegalArgumentException("Session not found with access code: " + accessCode));
+
             // For now, return mock data - later this will call external backend
-            List<ExercisePerformanceDTO> mockPerformanceData = createMockExercisePerformance(session.getRoutineSessionId());
-            
+            List<ExercisePerformanceDTO> mockPerformanceData = createMockExercisePerformance(
+                    session.getRoutineSessionId());
+
             // TODO: Replace with actual external API call
             // String url = exerciseAnalysisUrl + "/performance/" + accessCode;
-            // ExercisePerformanceDTO[] response = restTemplate.getForObject(url, ExercisePerformanceDTO[].class);
+            // ExercisePerformanceDTO[] response = restTemplate.getForObject(url,
+            // ExercisePerformanceDTO[].class);
             // return Arrays.asList(response);
-            
-            log.info("Retrieved {} exercise performance records for session: {}", 
-                     mockPerformanceData.size(), session.getRoutineSessionId());
-            
+
+            log.info("Retrieved {} exercise performance records for session: {}",
+                    mockPerformanceData.size(), session.getRoutineSessionId());
+
             return mockPerformanceData;
-            
+
         } catch (Exception e) {
             log.error("Error fetching exercise performance: {}", e.getMessage());
             return List.of();
         }
     }
-    
+
     /**
      * Create mock exercise performance data for testing
      */
     private List<ExercisePerformanceDTO> createMockExercisePerformance(Long sessionId) {
         return List.of(
-            new ExercisePerformanceDTO(
-                1L, 
-                85.5f, 
-                92.0f, 
-                "capture1.jpg,capture2.jpg", 
-                "GOOD", 
-                101L, 
-                "Knee Flexion Exercise", 
-                sessionId
-            ),
-            new ExercisePerformanceDTO(
-                2L, 
-                78.2f, 
-                88.5f, 
-                "capture3.jpg,capture4.jpg", 
-                "FAIR", 
-                102L, 
-                "Leg Extension", 
-                sessionId
-            ),
-            new ExercisePerformanceDTO(
-                3L, 
-                94.1f, 
-                96.8f, 
-                "capture5.jpg,capture6.jpg", 
-                "EXCELLENT", 
-                103L, 
-                "Balance Training", 
-                sessionId
-            )
-        );
+                new ExercisePerformanceDTO(
+                        1L,
+                        85.5f,
+                        92.0f,
+                        "capture1.jpg,capture2.jpg",
+                        "GOOD",
+                        101L,
+                        "Knee Flexion Exercise",
+                        sessionId),
+                new ExercisePerformanceDTO(
+                        2L,
+                        78.2f,
+                        88.5f,
+                        "capture3.jpg,capture4.jpg",
+                        "FAIR",
+                        102L,
+                        "Leg Extension",
+                        sessionId),
+                new ExercisePerformanceDTO(
+                        3L,
+                        94.1f,
+                        96.8f,
+                        "capture5.jpg,capture6.jpg",
+                        "EXCELLENT",
+                        103L,
+                        "Balance Training",
+                        sessionId));
     }
 }
