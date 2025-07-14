@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 public class KeyMomentDto {
     
     private String description;
-    private String timestamp;
+    private Integer timestamp;
 }
