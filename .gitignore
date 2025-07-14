@@ -36,3 +36,6 @@ build/
 *.http
 .env
 *.txt
+*.jpeg
+*.jpeg
+*.png

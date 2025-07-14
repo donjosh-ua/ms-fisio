@@ -25,10 +25,8 @@ public class CreateRoutineRequest {
     
     private String description;
     
-    @NotBlank(message = "Difficulty is required")
-    private String difficulty;
-    
-    private Boolean favorite = false;
+    @NotNull(message = "Difficulty is required")
+    private Integer difficulty;
     
     @Min(value = 1, message = "Duration must be at least 1 minute")
     private Integer duration;

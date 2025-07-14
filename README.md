@@ -2,7 +2,7 @@
 
 This is a microservice for managing physiotherapy patients, built with Java and Spring Boot. It provides a RESTful API for CRUD operations on patient data, including personal information, medical history, and treatment plans with JWT authentication and Google OAuth support.
 
-## 🚀 Quick Start with Docker
+## Quick Start with Docker
 
 The easiest way to run the application is using Docker:
 
@@ -23,18 +23,18 @@ docker-compose up --build -d
 
 **Access the application:**
 
-- 🌐 Application: http://localhost:8080
-- 📊 Health Check: http://localhost:8080/actuator/health
-- 🗄️ Database Admin: http://localhost:5050 (start with `--profile dev`)
+- Application: http://localhost:8080
+- Health Check: http://localhost:8080/actuator/health
+- Database Admin: http://localhost:5050 (start with `--profile dev`)
 
 **Test Credentials:**
 
 - Email: `test@example.com`
 - Password: `password123`
 
-📖 For detailed Docker setup instructions, see [DOCKER-SETUP.md](DOCKER-SETUP.md)
+For detailed Docker setup instructions, see [DOCKER-SETUP.md](DOCKER-SETUP.md)
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 src/main/java/com/ms_fisio/

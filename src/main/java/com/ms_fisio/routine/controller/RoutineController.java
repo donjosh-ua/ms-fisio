@@ -100,7 +100,7 @@ public class RoutineController {
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
         
         log.info("Request to get all routines");
-        
+        log.debug("Authorization header: {}", authorizationHeader);
         // Extract user ID from token or use mock user
         Long userId = getUserIdFromAuth(authorizationHeader);
         

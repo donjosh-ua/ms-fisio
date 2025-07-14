@@ -23,6 +23,9 @@ public class FeedbackModel {
     @Column(name = "feedback", columnDefinition = "TEXT")
     private String feedback;
     
+    @Column(name = "calification")
+    private Integer calification;
+    
     // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false)

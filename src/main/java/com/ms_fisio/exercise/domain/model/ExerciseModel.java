@@ -55,4 +55,8 @@ public class ExerciseModel {
     
     @OneToMany(mappedBy = "exercise", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ExercisePerformanceModel> exercisePerformances;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "objective_area_id")
+    private ObjectiveAreaModel objectiveArea;
 }
