@@ -25,10 +25,10 @@ import java.util.List;
 @Validated
 @Slf4j
 public class PatientController {
-    
+
     private final PatientService patientService;
     private final JwtService jwtService;
-    
+
     /**
      * Get chronic diseases catalog
      */
@@ -37,7 +37,7 @@ public class PatientController {
         List<ChronicDiseaseDTO> diseases = patientService.getChronicDiseases();
         return ResponseEntity.ok(diseases);
     }
-    
+
     /**
      * Get affected zones catalog
      */
@@ -46,7 +46,7 @@ public class PatientController {
         List<AffectedZoneDTO> zones = patientService.getAffectedZones();
         return ResponseEntity.ok(zones);
     }
-    
+
     /**
      * Get lesion types catalog
      */
@@ -55,20 +55,20 @@ public class PatientController {
         List<LesionTypeDTO> types = patientService.getLesionTypes();
         return ResponseEntity.ok(types);
     }
-    
+
     /**
      * Get physiotherapist routines
      */
     @GetMapping("/routines")
     public ResponseEntity<RoutinesResponse> getPhysioRoutines(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        
+
         Long userId = extractUserIdFromToken(authorizationHeader);
         RoutinesResponse response = patientService.getPhysioRoutines(userId);
-        
+
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * Create or update patient profile
      */
@@ -76,13 +76,13 @@ public class PatientController {
     public ResponseEntity<PatientProfileResponse> createOrUpdateProfile(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody PatientProfileRequest request) {
-        
+
         Long userId = extractUserIdFromToken(authorizationHeader);
         PatientProfileResponse response = patientService.createOrUpdatePatientProfile(request, userId);
-        
+
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * Delete routine assignment
      */
@@ -90,16 +90,16 @@ public class PatientController {
     public ResponseEntity<ApiResponse> deleteRoutineAssignment(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody DeleteRoutineRequest request) {
-        
+
         Long userId = extractUserIdFromToken(authorizationHeader);
         ApiResponse response = patientService.deleteRoutineAssignment(
-                request.getPatientProfileId(), 
-                request.getRoutineSessionId(), 
+                request.getPatientProfileId(),
+                request.getRoutineSessionId(),
                 userId);
-        
+
         return ResponseEntity.ok(response);
     }
-    
+
     /**
      * Get a specific patient profile by ID
      */
@@ -107,27 +107,27 @@ public class PatientController {
     public ResponseEntity<PatientProfileResponse> getPatientProfile(
             @PathVariable Long id,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        
+
         Long userId = extractUserIdFromToken(authorizationHeader);
         PatientProfileResponse response = patientService.getPatientProfile(id, userId);
-        
+
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     /**
      * Get all patient profiles for the authenticated user
      */
     @GetMapping("/profiles")
     public ResponseEntity<List<PatientProfileDTO>> getAllPatientProfiles(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        
+
         Long userId = extractUserIdFromToken(authorizationHeader);
         List<PatientProfileDTO> profiles = patientService.getAllPatientProfiles(userId);
-        
+
         return ResponseEntity.ok(profiles);
     }
 
@@ -139,7 +139,7 @@ public class PatientController {
         if (authorizationHeader == null || authorizationHeader.isEmpty()) {
             return 1L; // Default test user ID
         }
-        
+
         try {
             String token = authorizationHeader.replace("Bearer ", "");
             return jwtService.extractUserId(token);
