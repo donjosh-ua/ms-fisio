@@ -59,31 +59,32 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             }
 
             PlanTypeModel plan = planOpt.get();
-            Double price = plan.getPrice();
+            double price = plan.getPrice();
             String accessToken = getAccessToken();
 
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(accessToken);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
+            // Incluir userId y planTypeId en reference_id
             String body = String.format("""
-                        {
-                          "intent": "CAPTURE",
-                          "purchase_units": [{
-                            "amount": {
-                              "currency_code": "USD",
-                              "value": "%.2f"
-                            }
-                          }],
-                          "application_context": {
-                            "return_url": "http://localhost:8081/api/subscription/capture",
-                            "cancel_url": "http://localhost:8081/api/subscription/cancel"
-                          }
-                        }
-                    """, price);
+                {
+                  "intent": "CAPTURE",
+                  "purchase_units": [{
+                    "reference_id": "userId=%d,planTypeId=%d",
+                    "amount": {
+                      "currency_code": "USD",
+                      "value": "%.2f"
+                    }
+                  }],
+                  "application_context": {
+                    "return_url": "http://localhost:8081/api/subscription/capture",
+                    "cancel_url": "http://localhost:8081/api/subscription/cancel"
+                  }
+                }
+            """, request.getUserId(), request.getPlanTypeId(), price);
 
             HttpEntity<String> entity = new HttpEntity<>(body, headers);
-
             ResponseEntity<String> response = restTemplate.postForEntity(
                     baseUrl + "/v2/checkout/orders",
                     entity,
@@ -91,24 +92,26 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 log.error("Error en la respuesta de PayPal: {}", response.getBody());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en la respuesta de PayPal");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                     .body("Error en la respuesta de PayPal");
             }
 
             JsonNode json = objectMapper.readTree(response.getBody());
-            JsonNode linksNode = json.get("links");
+            JsonNode links = json.get("links");
             String approveLink = "";
-            if (linksNode != null && linksNode.isArray()) {
-                for (JsonNode link : linksNode) {
-                    if (link.has("rel") && "approve".equals(link.get("rel").asText())) {
+            if (links != null && links.isArray()) {
+                for (JsonNode link : links) {
+                    if ("approve".equals(link.get("rel").asText())) {
                         approveLink = link.get("href").asText();
                         break;
                     }
                 }
             }
+
             if (approveLink.isEmpty()) {
-                log.error("No se encontró el link de aprobación en la respuesta de PayPal: {}", response.getBody());
+                log.error("No se encontró link de aprobación: {}", response.getBody());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("No se pudo obtener el link de aprobación de PayPal");
+                                     .body("No se pudo obtener el link de aprobación");
             }
             return ResponseEntity.ok(approveLink);
 
@@ -127,7 +130,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
-
             ResponseEntity<String> response = restTemplate.postForEntity(
                     baseUrl + "/v2/checkout/orders/" + orderId + "/capture",
                     entity,
@@ -135,31 +137,47 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 log.error("Error en la respuesta de PayPal: {}", response.getBody());
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en la respuesta de PayPal");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                     .body("Error en la respuesta de PayPal");
             }
 
             JsonNode json = objectMapper.readTree(response.getBody());
-            JsonNode payerNode = json.get("payer");
-            if (payerNode == null || payerNode.get("email_address") == null) {
-                log.error("No se encontró el email del pagador en la respuesta de PayPal: {}", response.getBody());
+            JsonNode pu = json.get("purchase_units");
+            if (pu == null || !pu.isArray() || pu.isEmpty()) {
+                log.error("purchase_units ausente: {}", response.getBody());
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("No se pudo obtener el email del pagador");
+                                     .body("No se encontraron datos de compra");
             }
-            String payerEmail = payerNode.get("email_address").asText();
 
-            Optional<UserModel> userOpt = userRepository.findByEmail(payerEmail);
+            JsonNode firstPu = pu.get(0);
+            JsonNode refNode = firstPu.get("reference_id");
+            if (refNode == null || refNode.isNull()) {
+                log.error("reference_id ausente en purchase_units: {}", firstPu);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                     .body("No se encontró reference_id en la respuesta");
+            }
+
+            String referenceId = refNode.asText();
+            log.info("reference_id recibido: {}", referenceId);
+            // reference_id tiene formato "userId=1,planTypeId=1"
+            String[] parts = referenceId.split(",");
+            Long userId = Long.parseLong(parts[0].split("=")[1]);
+            Long planTypeId = Long.parseLong(parts[1].split("=")[1]);
+
+            Optional<UserModel> userOpt = userRepository.findById(userId);
             if (userOpt.isEmpty()) {
+                log.error("Usuario no encontrado con ID: {}", userId);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Usuario no encontrado");
             }
 
-            // Por defecto asignamos el primer plan
-            PlanTypeModel plan = planTypeRepository.findAll().stream().findFirst().orElseThrow();
+            PlanTypeModel plan = planTypeRepository.findById(planTypeId)
+                                                   .orElseThrow(() -> new IllegalArgumentException("Plan inválido"));
 
             SubscriptionModel subscription = new SubscriptionModel();
             subscription.setUser(userOpt.get());
             subscription.setPlanType(plan);
             subscription.setStartDate(LocalDate.now());
-            subscription.setDurationValue(1); // Por defecto 1 mes
+            subscription.setDurationValue(1);
             subscription.setDurationUnit(DurationUnit.MONTH);
 
             subscriptionRepository.save(subscription);
@@ -177,12 +195,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         headers.setBasicAuth(clientId, secret);
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        HttpEntity<String> entity = new HttpEntity<>("grant_type=client_credentials", headers);
-
+        HttpEntity<String> tokenRequest = new HttpEntity<>("grant_type=client_credentials", headers);
         ResponseEntity<String> response = restTemplate.postForEntity(
                 baseUrl + "/v1/oauth2/token",
-                entity,
+                tokenRequest,
                 String.class);
+
         try {
             JsonNode json = objectMapper.readTree(response.getBody());
             return json.get("access_token").asText();
@@ -191,3 +209,4 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 }
+
