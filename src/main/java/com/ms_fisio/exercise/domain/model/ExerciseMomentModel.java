@@ -21,7 +21,7 @@ public class ExerciseMomentModel {
     private Long exerciseMomentId;
     
     @Column(name = "timestamp", nullable = false)
-    private String timestamp;
+    private Integer timestamp;
     
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
