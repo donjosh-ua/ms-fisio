@@ -10,4 +10,5 @@ import com.ms_fisio.subscription.domain.model.SubscriptionModel;
  */
 @Repository
 public interface SubscriptionRepository extends JpaRepository<SubscriptionModel, Long> {
+boolean existsByUserUserId(Long userId);
 }

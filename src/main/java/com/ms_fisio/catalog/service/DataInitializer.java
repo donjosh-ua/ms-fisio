@@ -94,18 +94,26 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initializePlanTypes() {
-        if (planTypeRepository.count() == 0) {
-            planTypeRepository.save(PlanTypeModel.builder()
-                    .name("Mensual")
-                    .price(19.99)
-                    .build());
-            planTypeRepository.save(PlanTypeModel.builder()
-                    .name("Anual")
-                    .price(99.99)
-                    .build());
-            log.info("Created plan types for catalog");
-        }
+    if (planTypeRepository.count() == 0) {
+        planTypeRepository.save(PlanTypeModel.builder()
+                .name("Basic Plan Mensual")
+                .price(4.99)
+                .build());
+        planTypeRepository.save(PlanTypeModel.builder()
+                .name("Premium Plan Mensual")
+                .price(9.99)
+                .build());
+        planTypeRepository.save(PlanTypeModel.builder()
+                .name("Basic Plan Anual")
+                .price(49.99)
+                .build());
+        planTypeRepository.save(PlanTypeModel.builder()
+                .name("Premium Plan Anual")
+                .price(89.99)
+                .build());
+        log.info("Created plan types for catalog");
     }
+}
 
     private void initializeAffectedZones() {
         if (affectedZoneRepository.count() == 0) {
