@@ -32,7 +32,7 @@ public class DashboardService {
         log.info("Fetching dashboard info for user: {}", userId);
 
         List<NotificationDTO> notifications = this.getNotifications(userId);
-        List<OngoingSessionDTO> ongoingSessions = getMockOngoingSessions();
+        List<OngoingSessionDTO> ongoingSessions = this.sessionService.findOngoingSessionsByCreator(userId);
         
         return new DashboardInfoResponse(notifications, ongoingSessions);
     }

@@ -3,6 +3,7 @@ package com.ms_fisio.session.service;
 import com.ms_fisio.session.domain.dto.*;
 import com.ms_fisio.session.domain.model.*;
 import com.ms_fisio.session.repository.*;
+import com.ms_fisio.dashboard.dto.OngoingSessionDTO;
 import com.ms_fisio.routine.dto.RoutineSummaryDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -255,4 +256,8 @@ public class SessionService {
         return result;
     }
 
+    @Transactional(readOnly = true)
+    public List<OngoingSessionDTO> findOngoingSessionsByCreator(Long userId) {
+        return routineSessionRepository.findOngoingSessionsByCreator(userId);
+    }
 }
