@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+import com.ms_fisio.user.domain.dto.NotificationDTO;
+
 /**
  * DTO for dashboard information response
  */
@@ -14,6 +16,6 @@ import java.util.List;
 @AllArgsConstructor
 public class DashboardInfoResponse {
     
-    private List<NotificationDto> notifications;
-    private List<OngoingSessionDto> ongoingSessions;
+    private List<NotificationDTO> notifications;
+    private List<OngoingSessionDTO> ongoingSessions;
 }

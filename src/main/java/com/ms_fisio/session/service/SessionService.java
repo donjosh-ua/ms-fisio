@@ -11,7 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service for session operations
@@ -199,4 +202,57 @@ public class SessionService {
                         "Balance Training",
                         sessionId));
     }
+
+    @Transactional(readOnly = true)
+    public Map<Integer, Map<Integer, Long>> getPlannedSessionsByStartDate(Long userId) {
+        return getSessionChartGroupedByDate(
+            "planned",
+            routineSessionRepository.countPlannedSessionsByStartDate(userId)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Integer, Map<Integer, Long>> getExecutedSessionsByStartDate(Long userId) {
+        LocalDateTime now = LocalDateTime.now();
+        return getSessionChartGroupedByDate(
+            "executed",
+            routineSessionRepository.countExecutedSessionsByStartDate(userId, now)
+        );
+    }
+
+    private Map<Integer, Map<Integer, Long>> getSessionChartGroupedByDate(String type, List<SessionChartDTO> data) {
+        log.info("Fetching {} sessions grouped by year and month", type);
+
+        return data.stream().collect(
+            LinkedHashMap::new,
+            (map, dto) -> map
+                .computeIfAbsent(dto.getYear(), y -> new LinkedHashMap<>())
+                .put(dto.getMonth(), dto.getCount()),
+            LinkedHashMap::putAll
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Integer, Map<Integer, Long>> getFeedbackSentimentStats(Long userId) {
+        log.info("Fetching feedback sentiment stats for user {}", userId);
+
+        // Obtener los datos
+        List<SessionChartDTO> results = feedbackRepository.countFeedbackBySentiment(userId);
+
+        // Crear el mapa interno: <sentiment (1, 2, 3), count>
+        Map<Integer, Long> sentimentMap = results.stream()
+            .collect(Collectors.toMap(
+                SessionChartDTO::getMonth, // Aquí el "month" representa el sentiment (1, 2, 3)
+                SessionChartDTO::getCount,
+                (a, b) -> b,
+                LinkedHashMap::new
+            ));
+
+        // Crear el mapa externo con clave fija "0"
+        Map<Integer, Map<Integer, Long>> result = new LinkedHashMap<>();
+        result.put(0, sentimentMap);
+
+        return result;
+    }
+
 }

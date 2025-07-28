@@ -1,0 +1,10 @@
+package com.ms_fisio.session.domain.dto;
+
+/**
+ * DTO for session chart information
+ */
+public interface SessionChartDTO {
+    Integer getYear();
+    Integer getMonth();
+    Long getCount();
+}

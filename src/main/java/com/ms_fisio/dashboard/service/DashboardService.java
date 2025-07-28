@@ -10,6 +10,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ms_fisio.session.service.SessionService;
+import com.ms_fisio.user.domain.dto.NotificationDTO;
+import com.ms_fisio.user.service.NotificationService;
+
 /**
  * Service for dashboard operations
  */
@@ -17,15 +21,18 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class DashboardService {
+
+    private final SessionService sessionService;
+    private final NotificationService notificationService;
     
     /**
      * Get dashboard information including notifications and ongoing sessions
      */
     public DashboardInfoResponse getDashboardInfo(Long userId) {
         log.info("Fetching dashboard info for user: {}", userId);
-        
-        List<NotificationDto> notifications = getMockNotifications();
-        List<OngoingSessionDto> ongoingSessions = getMockOngoingSessions();
+
+        List<NotificationDTO> notifications = this.getNotifications(userId);
+        List<OngoingSessionDTO> ongoingSessions = getMockOngoingSessions();
         
         return new DashboardInfoResponse(notifications, ongoingSessions);
     }
@@ -39,12 +46,10 @@ public class DashboardService {
         List<ChartDto> charts = new ArrayList<>();
         
         if ("barras".equals(chartType)) {
-            charts.add(new ChartDto("barras", "https://example.com/charts/barras_weekly.png"));
-            charts.add(new ChartDto("barras", "https://example.com/charts/barras_monthly.png"));
+            charts.add(new ChartDto(this.sessionService.getFeedbackSentimentStats(userId), "Satisfaccion de los Usuarios", "barras"));
         } else if ("lineas".equals(chartType)) {
-            charts.add(new ChartDto("completadas", "https://example.com/charts/completadas_2024.png", 2024));
-            charts.add(new ChartDto("planificadas", "https://example.com/charts/planificadas_2024.png", 2024));
-            charts.add(new ChartDto("completadas", "https://example.com/charts/completadas_2023.png", 2023));
+            charts.add(new ChartDto(this.sessionService.getPlannedSessionsByStartDate(userId), "Sesiones Creadas", "lineas"));
+            charts.add(new ChartDto(this.sessionService.getExecutedSessionsByStartDate(userId), "Sesiones Completadas", "lineas"));
         }
         
         return new ChartsResponse(charts);
@@ -69,22 +74,22 @@ public class DashboardService {
     /**
      * Mock ongoing sessions data
      */
-    private List<OngoingSessionDto> getMockOngoingSessions() {
-        List<OngoingSessionDto> sessions = new ArrayList<>();
+    private List<OngoingSessionDTO> getMockOngoingSessions() {
+        List<OngoingSessionDTO> sessions = new ArrayList<>();
         
-        sessions.add(new OngoingSessionDto(
+        sessions.add(new OngoingSessionDTO(
             "Luis", 
             "https://example.com/images/luis.jpg", 
             "Piernas Hardcore", 
             "abc123"
         ));
-        sessions.add(new OngoingSessionDto(
+        sessions.add(new OngoingSessionDTO(
             "María", 
             "https://example.com/images/maria.jpg", 
             "Brazos Intensivo", 
             "def456"
         ));
-        sessions.add(new OngoingSessionDto(
+        sessions.add(new OngoingSessionDTO(
             "Carlos", 
             "https://example.com/images/carlos.jpg", 
             "Cardio Básico", 
@@ -92,5 +97,9 @@ public class DashboardService {
         ));
         
         return sessions;
+    }
+
+    private List<NotificationDTO> getNotifications(Long recipent) {
+        return this.notificationService.getNotificationsByRecipientId(recipent);
     }
 }
