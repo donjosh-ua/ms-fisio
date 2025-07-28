@@ -30,29 +30,35 @@ public class PatientController {
     private final JwtService jwtService;
 
     /**
-     * Get chronic diseases catalog
+     * Get chronic diseases catalog for the authenticated user
      */
     @GetMapping("/catalog/chronic-diseases")
-    public ResponseEntity<List<ChronicDiseaseDTO>> getChronicDiseases() {
-        List<ChronicDiseaseDTO> diseases = patientService.getChronicDiseases();
+    public ResponseEntity<List<ChronicDiseaseDTO>> getChronicDiseases(
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        Long userId = extractUserIdFromToken(authorizationHeader);
+        List<ChronicDiseaseDTO> diseases = patientService.getChronicDiseases(userId);
         return ResponseEntity.ok(diseases);
     }
 
     /**
-     * Get affected zones catalog
+     * Get affected zones catalog for the authenticated user
      */
     @GetMapping("/catalog/affected-zones")
-    public ResponseEntity<List<AffectedZoneDTO>> getAffectedZones() {
-        List<AffectedZoneDTO> zones = patientService.getAffectedZones();
+    public ResponseEntity<List<AffectedZoneDTO>> getAffectedZones(
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        Long userId = extractUserIdFromToken(authorizationHeader);
+        List<AffectedZoneDTO> zones = patientService.getAffectedZones(userId);
         return ResponseEntity.ok(zones);
     }
 
     /**
-     * Get lesion types catalog
+     * Get lesion types catalog for the authenticated user
      */
     @GetMapping("/catalog/lesion-types")
-    public ResponseEntity<List<LesionTypeDTO>> getLesionTypes() {
-        List<LesionTypeDTO> types = patientService.getLesionTypes();
+    public ResponseEntity<List<LesionTypeDTO>> getLesionTypes(
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        Long userId = extractUserIdFromToken(authorizationHeader);
+        List<LesionTypeDTO> types = patientService.getLesionTypes(userId);
         return ResponseEntity.ok(types);
     }
 

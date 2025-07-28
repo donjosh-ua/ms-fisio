@@ -43,31 +43,31 @@ public class PatientService {
     private final RoutineSessionRepository routineSessionRepository;
     
     /**
-     * Get all chronic diseases catalog
+     * Get all chronic diseases catalog for a user
      */
-    public List<ChronicDiseaseDTO> getChronicDiseases() {
-        log.info("Fetching all chronic diseases");
-        return chronicDiseaseRepository.findAll().stream()
+    public List<ChronicDiseaseDTO> getChronicDiseases(Long userId) {
+        log.info("Fetching all chronic diseases for user: {}", userId);
+        return chronicDiseaseRepository.findByUserId(userId).stream()
                 .map(disease -> new ChronicDiseaseDTO(disease.getChronicDiseaseId(), disease.getName()))
                 .toList();
     }
-    
+
     /**
-     * Get all affected zones catalog
+     * Get all affected zones catalog for a user
      */
-    public List<AffectedZoneDTO> getAffectedZones() {
-        log.info("Fetching all affected zones");
-        return affectedZoneRepository.findAll().stream()
+    public List<AffectedZoneDTO> getAffectedZones(Long userId) {
+        log.info("Fetching all affected zones for user: {}", userId);
+        return affectedZoneRepository.findByUserId(userId).stream()
                 .map(zone -> new AffectedZoneDTO(zone.getAffectedZoneId(), zone.getName()))
                 .toList();
     }
-    
+
     /**
-     * Get all lesion types catalog
+     * Get all lesion types catalog for a user
      */
-    public List<LesionTypeDTO> getLesionTypes() {
-        log.info("Fetching all lesion types");
-        return lesionTypeRepository.findAll().stream()
+    public List<LesionTypeDTO> getLesionTypes(Long userId) {
+        log.info("Fetching all lesion types for user: {}", userId);
+        return lesionTypeRepository.findByUserId(userId).stream()
                 .map(type -> new LesionTypeDTO(type.getLesionTypeId(), type.getName()))
                 .toList();
     }
@@ -350,7 +350,7 @@ public class PatientService {
         try {
             log.info("Fetching all patient profiles for user: {}", userId);
             
-            List<PatientProfileModel> profiles = patientProfileRepository.findByUser_UserId(userId);
+            List<PatientProfileModel> profiles = patientProfileRepository.findByUserId(userId);
             
             return profiles.stream()
                     .map(this::convertToPatientProfileDTO)

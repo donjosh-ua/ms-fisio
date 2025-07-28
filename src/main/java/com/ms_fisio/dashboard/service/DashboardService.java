@@ -12,8 +12,6 @@ import java.util.List;
 
 import com.ms_fisio.session.domain.dto.FeedbackCommentaryDTO;
 import com.ms_fisio.session.service.SessionService;
-import com.ms_fisio.user.domain.dto.NotificationDTO;
-import com.ms_fisio.user.service.NotificationService;
 
 /**
  * Service for dashboard operations
