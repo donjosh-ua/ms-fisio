@@ -43,7 +43,7 @@ public interface RoutineSessionRepository extends JpaRepository<RoutineSessionMo
             COUNT(*) AS count
         FROM routine_sessions rs
         JOIN routines r ON rs.routine_id = r.routine_id
-        WHERE r.created_by_user_id = :userId
+        WHERE r.created_by = :userId
         GROUP BY year, month
         ORDER BY year, month
         """, nativeQuery = true)
@@ -59,7 +59,7 @@ public interface RoutineSessionRepository extends JpaRepository<RoutineSessionMo
         FROM routine_sessions rs
         JOIN exercise_performances ep ON ep.session_id = rs.routine_session_id
         JOIN routines r ON rs.routine_id = r.routine_id
-        WHERE r.created_by_user_id = :userId
+        WHERE r.created_by = :userId
         AND rs.end_datetime < :now
         GROUP BY year, month
         ORDER BY year, month

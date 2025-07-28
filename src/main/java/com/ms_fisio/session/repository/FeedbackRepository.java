@@ -17,25 +17,25 @@ import com.ms_fisio.session.domain.dto.SessionChartDTO;
 @Repository
 public interface FeedbackRepository extends JpaRepository<FeedbackModel, Long> {
 
-    @Query("""
-        SELECT new com.ms_fisio.session.domain.dto.SessionChartDTO(
-            1,
-            CASE 
-                WHEN f.calification >= 4 THEN 1  -- Positivo
-                WHEN f.calification = 3 THEN 2   -- Neutro
-                ELSE 3                           -- Negativo
-            END,
-            COUNT(f)
-        )
-        FROM FeedbackModel f
-        WHERE f.routineSession.routine.createdByUser.userId = :userId
-        GROUP BY 
-            CASE 
-                WHEN f.calification >= 4 THEN 1
-                WHEN f.calification = 3 THEN 2
-                ELSE 3
-            END
-    """)
-    List<SessionChartDTO> countFeedbackBySentiment(Long userId);
+    // @Query("""
+    //     SELECT new com.ms_fisio.session.domain.dto.SessionChartDTO(
+    //         1,
+    //         CASE 
+    //             WHEN f.calification >= 4 THEN 1  -- Positivo
+    //             WHEN f.calification = 3 THEN 2   -- Neutro
+    //             ELSE 3                           -- Negativo
+    //         END,
+    //         COUNT(f)
+    //     )
+    //     FROM FeedbackModel f
+    //     WHERE f.routineSession.routine.createdByUser.userId = :userId
+    //     GROUP BY 
+    //         CASE 
+    //             WHEN f.calification >= 4 THEN 1
+    //             WHEN f.calification = 3 THEN 2
+    //             ELSE 3
+    //         END
+    // """)
+    // List<SessionChartDTO> countFeedbackBySentiment(Long userId);
 
 }

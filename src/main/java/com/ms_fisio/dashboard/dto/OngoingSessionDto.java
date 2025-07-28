@@ -15,5 +15,5 @@ public class OngoingSessionDTO {
     private String patientName;
     private String patientPfpUrl;
     private String routineName;
-    private String routineId;
+    private Long routineId;
 }

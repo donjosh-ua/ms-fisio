@@ -233,28 +233,28 @@ public class SessionService {
         );
     }
 
-    @Transactional(readOnly = true)
-    public Map<Integer, Map<Integer, Long>> getFeedbackSentimentStats(Long userId) {
-        log.info("Fetching feedback sentiment stats for user {}", userId);
+    // @Transactional(readOnly = true)
+    // public Map<Integer, Map<Integer, Long>> getFeedbackSentimentStats(Long userId) {
+    //     log.info("Fetching feedback sentiment stats for user {}", userId);
 
-        // Obtener los datos
-        List<SessionChartDTO> results = feedbackRepository.countFeedbackBySentiment(userId);
+    //     // Obtener los datos
+    //     List<SessionChartDTO> results = feedbackRepository.countFeedbackBySentiment(userId);
 
-        // Crear el mapa interno: <sentiment (1, 2, 3), count>
-        Map<Integer, Long> sentimentMap = results.stream()
-            .collect(Collectors.toMap(
-                SessionChartDTO::getMonth, // Aquí el "month" representa el sentiment (1, 2, 3)
-                SessionChartDTO::getCount,
-                (a, b) -> b,
-                LinkedHashMap::new
-            ));
+    //     // Crear el mapa interno: <sentiment (1, 2, 3), count>
+    //     Map<Integer, Long> sentimentMap = results.stream()
+    //         .collect(Collectors.toMap(
+    //             SessionChartDTO::getMonth, // Aquí el "month" representa el sentiment (1, 2, 3)
+    //             SessionChartDTO::getCount,
+    //             (a, b) -> b,
+    //             LinkedHashMap::new
+    //         ));
 
-        // Crear el mapa externo con clave fija "0"
-        Map<Integer, Map<Integer, Long>> result = new LinkedHashMap<>();
-        result.put(0, sentimentMap);
+    //     // Crear el mapa externo con clave fija "0"
+    //     Map<Integer, Map<Integer, Long>> result = new LinkedHashMap<>();
+    //     result.put(0, sentimentMap);
 
-        return result;
-    }
+    //     return result;
+    // }
 
     @Transactional(readOnly = true)
     public List<OngoingSessionDTO> findOngoingSessionsByCreator(Long userId) {

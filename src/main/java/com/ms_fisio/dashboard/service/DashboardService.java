@@ -23,7 +23,7 @@ import com.ms_fisio.user.service.NotificationService;
 public class DashboardService {
 
     private final SessionService sessionService;
-    private final NotificationService notificationService;
+    // private final NotificationService notificationService;
     
     /**
      * Get dashboard information including notifications and ongoing sessions
@@ -31,7 +31,7 @@ public class DashboardService {
     public DashboardInfoResponse getDashboardInfo(Long userId) {
         log.info("Fetching dashboard info for user: {}", userId);
 
-        List<NotificationDTO> notifications = this.getNotifications(userId);
+        List<NotificationDto> notifications = getMockNotifications();
         List<OngoingSessionDTO> ongoingSessions = this.sessionService.findOngoingSessionsByCreator(userId);
         
         return new DashboardInfoResponse(notifications, ongoingSessions);
@@ -46,7 +46,7 @@ public class DashboardService {
         List<ChartDto> charts = new ArrayList<>();
         
         if ("barras".equals(chartType)) {
-            charts.add(new ChartDto(this.sessionService.getFeedbackSentimentStats(userId), "Satisfaccion de los Usuarios", "barras"));
+            // charts.add(new ChartDto(this.sessionService.getFeedbackSentimentStats(userId), "Satisfaccion de los Usuarios", "barras"));
         } else if ("lineas".equals(chartType)) {
             charts.add(new ChartDto(this.sessionService.getPlannedSessionsByStartDate(userId), "Sesiones Creadas", "lineas"));
             charts.add(new ChartDto(this.sessionService.getExecutedSessionsByStartDate(userId), "Sesiones Completadas", "lineas"));
@@ -99,7 +99,4 @@ public class DashboardService {
         return sessions;
     }
 
-    private List<NotificationDTO> getNotifications(Long recipent) {
-        return this.notificationService.getNotificationsByRecipientId(recipent);
-    }
 }

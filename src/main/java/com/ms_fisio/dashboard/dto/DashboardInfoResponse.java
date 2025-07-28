@@ -16,6 +16,6 @@ import com.ms_fisio.user.domain.dto.NotificationDTO;
 @AllArgsConstructor
 public class DashboardInfoResponse {
     
-    private List<NotificationDTO> notifications;
+    private List<NotificationDto> notifications;
     private List<OngoingSessionDTO> ongoingSessions;
 }
