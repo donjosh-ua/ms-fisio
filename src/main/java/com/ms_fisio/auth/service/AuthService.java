@@ -2,6 +2,7 @@ package com.ms_fisio.auth.service;
 
 import com.ms_fisio.auth.dto.AuthResponse;
 import com.ms_fisio.auth.dto.GoogleUserInfo;
+import com.ms_fisio.auth.dto.RegisterRequest;
 import com.ms_fisio.auth.dto.UserResponseDTO;
 import com.ms_fisio.auth.exception.AuthenticationException;
 import com.ms_fisio.auth.exception.InvalidTokenException;
@@ -120,6 +121,31 @@ public class AuthService {
         // 3. Use token versioning
         
         log.info("User logged out successfully");
+    }
+    
+    /**
+     * Register a new user
+     */
+    public AuthResponse registerUser(RegisterRequest request) {
+        // Check if email already exists
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AuthenticationException("Email already registered");
+        }
+        // Check if username exists
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new AuthenticationException("Username already exists");
+        }
+        // Create new user
+        UserModel user = new UserModel();
+        user.setEmail(request.getEmail());
+        user.setFullName(request.getFullName());
+        user.setUsername(request.getUsername());
+        user.setProfilePhoto(request.getProfilePhoto()); // base64 string
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setAuthProvider(com.ms_fisio.shared.domain.enums.AuthProvider.LOCAL);
+        user.setEmailVerified(false);
+        userRepository.save(user);
+        return generateAuthResponse(user);
     }
     
     /**

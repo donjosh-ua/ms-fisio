@@ -36,7 +36,7 @@ public class UserModel {
     @Column(name = "email", length = 100, nullable = false, unique = true)
     private String email;
     
-    @Column(name = "profile_photo", length = 255)
+    @Column(name = "profile_photo", columnDefinition = "TEXT")
     private String profilePhoto;
     
     @Column(name = "password", length = 255)

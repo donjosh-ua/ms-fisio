@@ -3,6 +3,7 @@ package com.ms_fisio.auth.controller;
 import com.ms_fisio.auth.dto.AuthResponse;
 import com.ms_fisio.auth.dto.GoogleLoginRequest;
 import com.ms_fisio.auth.dto.LoginRequest;
+import com.ms_fisio.auth.dto.RegisterRequest;
 import com.ms_fisio.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -104,5 +105,21 @@ public class AuthController {
         
         log.info("User logged out successfully");
         return ResponseEntity.noContent().build();
+    }
+    
+    /**
+     * Register a new user
+     */
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        log.info("Register attempt for email: {}", request.getEmail());
+        try {
+            AuthResponse response = authService.registerUser(request);
+            log.info("User registered successfully: {}", request.getEmail());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Registration failed for email: {}", request.getEmail(), e);
+            throw e;
+        }
     }
 }

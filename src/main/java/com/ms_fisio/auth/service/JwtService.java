@@ -40,7 +40,7 @@ public class JwtService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getUserId());
         claims.put("email", user.getEmail());
-        claims.put("fullName", user.getFullName());
+        claims.put("username", user.getUsername());
         
         return createToken(claims, user.getUsername(), accessTokenExpiration);
     }

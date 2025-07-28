@@ -93,6 +93,39 @@ public class AccountController {
     }
     
     /**
+     * Get current account information
+     */
+    @GetMapping
+    public ResponseEntity<AccountResponse> getAccount(
+            @RequestHeader("Authorization") String authorizationHeader) {
+        try {
+            Long userId = extractUserIdFromToken(authorizationHeader);
+            return ResponseEntity.ok(accountService.getAccountInformation(userId));
+        } catch (AccountException e) {
+            return ResponseEntity.badRequest().body(AccountResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error fetching account info", e);
+            return ResponseEntity.badRequest().body(AccountResponse.error("Unable to fetch account information"));
+        }
+    }
+
+    /**
+     * Create a new account (admin only or for test/demo)
+     */
+    @PostMapping
+    public ResponseEntity<AccountResponse> createAccount(
+            @Valid @RequestBody UpdateAccountRequest request) {
+        try {
+            return ResponseEntity.ok(accountService.createAccount(request));
+        } catch (AccountException e) {
+            return ResponseEntity.badRequest().body(AccountResponse.error(e.getMessage()));
+        } catch (Exception e) {
+            log.error("Error creating account", e);
+            return ResponseEntity.badRequest().body(AccountResponse.error("Unable to create account"));
+        }
+    }
+    
+    /**
      * Extract user ID from JWT token
      */
     private Long extractUserIdFromToken(String authorizationHeader) {

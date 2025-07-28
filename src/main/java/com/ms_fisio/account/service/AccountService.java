@@ -1,5 +1,7 @@
 package com.ms_fisio.account.service;
 
+import com.ms_fisio.account.dto.AccountDTO;
+import com.ms_fisio.account.dto.AccountResponse;
 import com.ms_fisio.account.dto.ChangePasswordRequest;
 import com.ms_fisio.account.dto.UpdateAccountRequest;
 import com.ms_fisio.account.exception.AccountException;
@@ -123,5 +125,40 @@ public class AccountService {
         if (existingUser.isPresent() && !existingUser.get().getUserId().equals(currentUserId)) {
             throw new AccountException("Email already exists");
         }
+    }
+
+    /**
+     * Get current account information
+     */
+    public AccountResponse getAccountInformation(Long userId) {
+        UserModel user = getUserById(userId);
+        AccountDTO dto = new AccountDTO();
+        dto.setUserId(user.getUserId());
+        dto.setUsername(user.getUsername());
+        dto.setFullName(user.getFullName());
+        dto.setEmail(user.getEmail());
+        dto.setProfilePhoto(user.getProfilePhoto());
+        return AccountResponse.success("Account information fetched successfully.", dto);
+    }
+
+    /**
+     * Create a new account (admin only or for test/demo)
+     */
+    @Transactional
+    public AccountResponse createAccount(UpdateAccountRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AccountException("Email already exists");
+        }
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new AccountException("Username already exists");
+        }
+        UserModel user = new UserModel();
+        user.setUsername(request.getUsername());
+        user.setFullName(request.getFullName());
+        user.setEmail(request.getEmail());
+        user.setProfilePhoto(request.getProfilePhoto());
+        user.setPassword(passwordEncoder.encode(request.getPassword())); // Debe venir ya codificada o usar encoder si se requiere
+        userRepository.save(user);
+        return AccountResponse.success("Account created successfully.");
     }
 }
