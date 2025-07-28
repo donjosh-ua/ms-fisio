@@ -75,29 +75,29 @@ public class DashboardService {
     /**
      * Mock ongoing sessions data
      */
-    private List<OngoingSessionDTO> getMockOngoingSessions() {
-        List<OngoingSessionDTO> sessions = new ArrayList<>();
+    // private List<OngoingSessionDTO> getMockOngoingSessions() {
+    //     List<OngoingSessionDTO> sessions = new ArrayList<>();
         
-        sessions.add(new OngoingSessionDTO(
-            "Luis", 
-            "https://example.com/images/luis.jpg", 
-            "Piernas Hardcore", 
-            "abc123"
-        ));
-        sessions.add(new OngoingSessionDTO(
-            "María", 
-            "https://example.com/images/maria.jpg", 
-            "Brazos Intensivo", 
-            "def456"
-        ));
-        sessions.add(new OngoingSessionDTO(
-            "Carlos", 
-            "https://example.com/images/carlos.jpg", 
-            "Cardio Básico", 
-            "ghi789"
-        ));
+    //     sessions.add(new OngoingSessionDTO(
+    //         "Luis", 
+    //         "https://example.com/images/luis.jpg", 
+    //         "Piernas Hardcore", 
+    //         1
+    //     ));
+    //     sessions.add(new OngoingSessionDTO(
+    //         "María", 
+    //         "https://example.com/images/maria.jpg", 
+    //         "Brazos Intensivo", 
+    //         1
+    //     ));
+    //     sessions.add(new OngoingSessionDTO(
+    //         "Carlos", 
+    //         "https://example.com/images/carlos.jpg", 
+    //         "Cardio Básico", 
+    //         1
+    //     ));
         
-        return sessions;
-    }
+    //     return sessions;
+    // }
 
 }
