@@ -11,6 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.List;
 
 /**
  * Controller for routine management endpoints
@@ -32,21 +33,19 @@ public class RoutineController {
     public ResponseEntity<RoutineResponse> createRoutine(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody CreateRoutineRequest request) {
-        
         log.info("Request to create routine: {}", request.getName());
-        
-        // Extract user ID from token or use mock user
         Long userId = getUserIdFromAuth(authorizationHeader);
-        
+        if (userId == null) {
+            return ResponseEntity.status(401).body(RoutineResponse.error("Unauthorized"));
+        }
         RoutineResponse response = routineService.createRoutine(request, userId);
-        
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     /**
      * Update an existing routine
      */
@@ -55,21 +54,19 @@ public class RoutineController {
             @PathVariable Long id,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @Valid @RequestBody CreateRoutineRequest request) {
-        
         log.info("Request to update routine: {}", id);
-        
-        // Extract user ID from token or use mock user
         Long userId = getUserIdFromAuth(authorizationHeader);
-        
+        if (userId == null) {
+            return ResponseEntity.status(401).body(RoutineResponse.error("Unauthorized"));
+        }
         RoutineResponse response = routineService.updateRoutine(id, request, userId);
-        
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     /**
      * Delete a routine
      */
@@ -77,14 +74,12 @@ public class RoutineController {
     public ResponseEntity<RoutineResponse> deleteRoutine(
             @PathVariable Long id,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        
         log.info("Request to delete routine: {}", id);
-        
-        // Extract user ID from token or use mock user
         Long userId = getUserIdFromAuth(authorizationHeader);
-        
+        if (userId == null) {
+            return ResponseEntity.status(401).body(RoutineResponse.error("Unauthorized"));
+        }
         RoutineResponse response = routineService.deleteRoutine(id, userId);
-        
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
@@ -98,18 +93,38 @@ public class RoutineController {
     @GetMapping
     public ResponseEntity<RoutinesResponse> getAllRoutines(
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        
         log.info("Request to get all routines");
         log.debug("Authorization header: {}", authorizationHeader);
-        // Extract user ID from token or use mock user
         Long userId = getUserIdFromAuth(authorizationHeader);
-        
+        if (userId == null) {
+            return ResponseEntity.status(401).body(new RoutinesResponse(List.of()));
+        }
         RoutinesResponse response = routineService.getAllRoutines(userId);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * Get a routine by ID
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<RoutineResponse> getRoutineById(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        log.info("Request to get routine by id: {}", id);
+        Long userId = getUserIdFromAuth(authorizationHeader);
+        if (userId == null) {
+            return ResponseEntity.status(401).body(RoutineResponse.error("Unauthorized"));
+        }
+        RoutineResponse response = routineService.getRoutineById(id, userId);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
     
     /**
-     * Extract user ID from authorization header or return default
+     * Extract user ID from authorization header
      */
     private Long getUserIdFromAuth(String authorizationHeader) {
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
@@ -120,9 +135,7 @@ public class RoutineController {
                 log.warn("Failed to extract user ID from token: {}", e.getMessage());
             }
         }
-        
-        // Development mode: return default user ID
-        log.debug("Using default user ID for development mode");
-        return 1L;
+        // No fallback: return null if no valid token
+        return null;
     }
 }

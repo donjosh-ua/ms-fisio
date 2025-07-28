@@ -1,7 +1,11 @@
 package com.ms_fisio.routine.service;
 
 import com.ms_fisio.routine.dto.*;
+import com.ms_fisio.exercise.domain.dto.ExerciseDTO;
+import com.ms_fisio.exercise.domain.dto.ExerciseMomentDTO;
+import com.ms_fisio.exercise.domain.dto.ObjectiveAreaDTO;
 import com.ms_fisio.routine.domain.dto.CreateRoutineRequest;
+import com.ms_fisio.routine.domain.dto.RoutineDTO;
 import com.ms_fisio.routine.domain.model.RoutineModel;
 import com.ms_fisio.routine.domain.model.RoutineDayModel;
 import com.ms_fisio.routine.domain.model.RoutineExerciseModel;
@@ -101,25 +105,15 @@ public class RoutineService {
     @Transactional
     public RoutineResponse updateRoutine(Long routineId, CreateRoutineRequest request, Long userId) {
         log.info("Updating routine: {} for user: {}", routineId, userId);
-
         try {
-            // Find existing routine
             RoutineModel routine = routineRepository.findById(routineId)
                     .orElseThrow(() -> new RuntimeException("Routine not found"));
-
-            // Validate user owns the routine
             if (!routine.getCreatedByUser().getUserId().equals(userId)) {
                 throw new RuntimeException("Unauthorized to modify this routine");
             }
-
-            // Validate target area exists
             ObjectiveAreaModel targetArea = objectiveAreaRepository.findById(request.getTargetAreaId())
                     .orElseThrow(() -> new RuntimeException("Target area not found"));
-
-            // Parse difficulty
             Integer difficulty = request.getDifficulty();
-
-            // Update routine
             routine.setName(request.getName());
             routine.setCategory(request.getCategory());
             routine.setDescription(request.getDescription());
@@ -127,29 +121,44 @@ public class RoutineService {
             routine.setDuration(request.getDuration());
             routine.setWeeks(request.getWeeks());
             routine.setObjectiveArea(targetArea);
-
+            // Eliminar ejercicios que ya no están en la lista enviada
+            List<Long> idsEnviados = request.getExercises().stream()
+                .map(e -> e.getExerciseId())
+                .filter(id -> id != null)
+                .toList();
+            List<RoutineExerciseModel> ejerciciosActuales = routine.getRoutineExercises();
+            // Si la lista enviada está vacía, elimina todos los ejercicios
+            if (idsEnviados.isEmpty()) {
+                for (RoutineExerciseModel re : ejerciciosActuales) {
+                    routineExerciseRepository.delete(re);
+                }
+                ejerciciosActuales.clear();
+                routine.setRoutineExercises(ejerciciosActuales);
+            } else {
+                // Elimina solo los que no están en la lista enviada
+                ejerciciosActuales.removeIf(re -> {
+                    boolean eliminar = !idsEnviados.contains(re.getExercise().getExerciseId());
+                    if (eliminar) routineExerciseRepository.delete(re);
+                    return eliminar;
+                });
+                routine.setRoutineExercises(ejerciciosActuales);
+            }
             // Clear existing relationships and create new ones
             clearRoutineRelationships(routine);
-
             // Save updated routine
             routine = routineRepository.save(routine);
-
             // Save new routine days
             if (request.getDays() != null && !request.getDays().isEmpty()) {
                 saveDaysForRoutine(routine, request.getDays());
             }
-
             // Save new exercises
             if (request.getExercises() != null && !request.getExercises().isEmpty()) {
                 saveExercisesForRoutine(routine, request.getExercises());
             }
-
             // Generate session code
             String sessionCode = generateSessionCode();
-
             log.info("Routine updated successfully with ID: {}", routine.getRoutineId());
             return RoutineResponse.success("Routine saved successfully.", sessionCode);
-
         } catch (Exception e) {
             log.error("Error updating routine: {}", e.getMessage());
             return RoutineResponse.error("Failed to update routine: " + e.getMessage());
@@ -211,6 +220,76 @@ public class RoutineService {
     }
 
     /**
+     * Get a routine by ID
+     */
+    @Transactional(readOnly = true)
+    public RoutineResponse getRoutineById(Long routineId, Long userId) {
+        log.info("Fetching routine by id: {} for user: {}", routineId, userId);
+        try {
+            RoutineModel routine = routineRepository.findById(routineId)
+                    .orElseThrow(() -> new RuntimeException("Routine not found"));
+            if (!routine.getCreatedByUser().getUserId().equals(userId)) {
+                throw new RuntimeException("Unauthorized to view this routine");
+            }
+            // Map RoutineModel to RoutineDTO
+            RoutineDTO dto = new RoutineDTO();
+            dto.setRoutineId(routine.getRoutineId());
+            dto.setName(routine.getName());
+            dto.setCategory(routine.getCategory());
+            dto.setDescription(routine.getDescription());
+            dto.setDifficulty(routine.getDifficulty());
+            dto.setDuration(routine.getDuration());
+            dto.setWeeks(routine.getWeeks());
+            // ObjectiveArea
+            if (routine.getObjectiveArea() != null) {
+                ObjectiveAreaDTO areaDTO = new ObjectiveAreaDTO();
+                areaDTO.setId(routine.getObjectiveArea().getObjectiveAreaId());
+                areaDTO.setName(routine.getObjectiveArea().getName());
+                areaDTO.setDescription(""); // Add description if available
+                dto.setObjectiveArea(areaDTO);
+            }
+            // Days
+            if (routine.getRoutineDays() != null) {
+                dto.setDays(routine.getRoutineDays().stream()
+                    .map(d -> d.getRoutineDayId().getDayOfWeek().name())
+                    .toList());
+            }
+            // Exercises
+            if (routine.getRoutineExercises() != null) {
+                dto.setExercises(routine.getRoutineExercises().stream().map(re -> {
+                    ExerciseModel ex = re.getExercise();
+                    ExerciseDTO exDto = new ExerciseDTO();
+                    exDto.setExerciseId(ex.getExerciseId());
+                    exDto.setName(ex.getName());
+                    exDto.setDescription(ex.getDescription());
+                    exDto.setVideoUrl(ex.getVideoUrl());
+                    exDto.setVideoId(ex.getVideoId());
+                    exDto.setSets(ex.getSets());
+                    exDto.setRepetitions(ex.getRepsPerSet());
+                    exDto.setAssisted(ex.getWithAssistant());
+                    if (ex.getObjectiveArea() != null) {
+                        exDto.setObjectiveAreaId(ex.getObjectiveArea().getObjectiveAreaId());
+                    }
+                    if (ex.getExerciseMoments() != null) {
+                        exDto.setKeyMoments(ex.getExerciseMoments().stream().map(m -> {
+                            ExerciseMomentDTO mdto = new ExerciseMomentDTO();
+                            mdto.setId(m.getExerciseMomentId());
+                            mdto.setDescription(m.getDescription());
+                            mdto.setTimestamp(m.getTimestamp());
+                            return mdto;
+                        }).toList());
+                    }
+                    return exDto;
+                }).toList());
+            }
+            return RoutineResponse.success("Routine fetched successfully.", dto);
+        } catch (Exception e) {
+            log.error("Error fetching routine: {}", e.getMessage());
+            return RoutineResponse.error("Failed to fetch routine: " + e.getMessage());
+        }
+    }
+
+    /**
      * Save days for a routine
      */
     private void saveDaysForRoutine(RoutineModel routine, List<String> days) {
@@ -239,19 +318,46 @@ public class RoutineService {
     private void saveExercisesForRoutine(RoutineModel routine, List<ExerciseDto> exercises) {
         for (ExerciseDto exerciseDto : exercises) {
             try {
-                // Create or find exercise
-                ExerciseModel exercise = new ExerciseModel();
-                exercise.setName(exerciseDto.getName());
-                exercise.setVideoUrl(exerciseDto.getVideoUrl());
-                exercise.setVideoId(exerciseDto.getVideoId());
-                exercise.setSets(exerciseDto.getSets());
-                exercise.setRepsPerSet(exerciseDto.getRepetitions());
-                exercise.setWithAssistant(Boolean.TRUE.equals(exerciseDto.getAssisted()));
-                exercise.setDescription(exerciseDto.getDescription());
+                ExerciseModel exercise;
+                if (exerciseDto.getExerciseId() != null) {
+                    // Buscar ejercicio existente
+                    exercise = exerciseRepository.findById(exerciseDto.getExerciseId()).orElse(null);
+                    if (exercise != null) {
+                        // Actualizar datos del ejercicio existente
+                        exercise.setName(exerciseDto.getName());
+                        exercise.setVideoUrl(exerciseDto.getVideoUrl());
+                        exercise.setVideoId(exerciseDto.getVideoId());
+                        exercise.setSets(exerciseDto.getSets());
+                        exercise.setRepsPerSet(exerciseDto.getRepetitions());
+                        exercise.setWithAssistant(Boolean.TRUE.equals(exerciseDto.getAssisted()));
+                        exercise.setDescription(exerciseDto.getDescription());
+                        exercise = exerciseRepository.save(exercise);
+                    } else {
+                        // Si el id no existe, crear nuevo
+                        exercise = new ExerciseModel();
+                        exercise.setName(exerciseDto.getName());
+                        exercise.setVideoUrl(exerciseDto.getVideoUrl());
+                        exercise.setVideoId(exerciseDto.getVideoId());
+                        exercise.setSets(exerciseDto.getSets());
+                        exercise.setRepsPerSet(exerciseDto.getRepetitions());
+                        exercise.setWithAssistant(Boolean.TRUE.equals(exerciseDto.getAssisted()));
+                        exercise.setDescription(exerciseDto.getDescription());
+                        exercise = exerciseRepository.save(exercise);
+                    }
+                } else {
+                    // Crear nuevo ejercicio
+                    exercise = new ExerciseModel();
+                    exercise.setName(exerciseDto.getName());
+                    exercise.setVideoUrl(exerciseDto.getVideoUrl());
+                    exercise.setVideoId(exerciseDto.getVideoId());
+                    exercise.setSets(exerciseDto.getSets());
+                    exercise.setRepsPerSet(exerciseDto.getRepetitions());
+                    exercise.setWithAssistant(Boolean.TRUE.equals(exerciseDto.getAssisted()));
+                    exercise.setDescription(exerciseDto.getDescription());
+                    exercise = exerciseRepository.save(exercise);
+                }
 
-                exercise = exerciseRepository.save(exercise);
-
-                // Create relationship between routine and exercise
+                // Crear relación entre rutina y ejercicio
                 RoutineExerciseModel routineExercise = new RoutineExerciseModel();
                 RoutineExerciseModel.RoutineExerciseId routineExerciseId = new RoutineExerciseModel.RoutineExerciseId();
                 routineExerciseId.setRoutineId(routine.getRoutineId());
@@ -263,7 +369,7 @@ public class RoutineService {
 
                 routineExerciseRepository.save(routineExercise);
 
-                // Save key moments
+                // Guardar key moments
                 if (exerciseDto.getKeyMoments() != null) {
                     saveKeyMomentsForExercise(exercise, exerciseDto.getKeyMoments());
                 }

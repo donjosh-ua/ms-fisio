@@ -30,4 +30,6 @@ public class ExerciseDto {
     
     @JsonProperty("key_moments")
     private List<KeyMomentDto> keyMoments;
+
+    private Long exerciseId;
 }
