@@ -1,6 +1,5 @@
 package com.ms_fisio.subscription.service.impl;
 
-import java.net.URI;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -48,8 +47,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     @Value("${paypal.base-url}")
     private String baseUrl;
 
-    private static final String FRONTEND_REDIRECT_URL = "http://localhost:4200/account/payment";
-
     @Override
     public ResponseEntity<String> createOrder(CreateSubscriptionRequest request) {
         log.info("Recibida solicitud de creación: {}", request);
@@ -61,10 +58,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 return ResponseEntity.badRequest().body("Usuario o plan inválido");
             }
 
-            if (subscriptionRepository.existsByUserUserId(request.getUserId())) {
-                return ResponseEntity.badRequest().body("El usuario ya tiene una suscripción activa");
-            }
-
             PlanTypeModel plan = planOpt.get();
             double price = plan.getPrice();
             String accessToken = getAccessToken();
@@ -73,6 +66,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             headers.setBearerAuth(accessToken);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
+            // Incluir userId y planTypeId en reference_id
             String body = String.format("""
                 {
                   "intent": "CAPTURE",
@@ -84,8 +78,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                     }
                   }],
                   "application_context": {
-                    "return_url": "http://localhost:8080/api/subscription/capture",
-                    "cancel_url": "http://localhost:8080/api/subscription/cancel"
+                    "return_url": "http://localhost:8081/api/subscription/capture",
+                    "cancel_url": "http://localhost:8081/api/subscription/cancel"
                   }
                 }
             """, request.getUserId(), request.getPlanTypeId(), price);
@@ -119,7 +113,6 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                      .body("No se pudo obtener el link de aprobación");
             }
-
             return ResponseEntity.ok(approveLink);
 
         } catch (Exception e) {
@@ -166,6 +159,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
             String referenceId = refNode.asText();
             log.info("reference_id recibido: {}", referenceId);
+            // reference_id tiene formato "userId=1,planTypeId=1"
             String[] parts = referenceId.split(",");
             Long userId = Long.parseLong(parts[0].split("=")[1]);
             Long planTypeId = Long.parseLong(parts[1].split("=")[1]);
@@ -179,33 +173,16 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             PlanTypeModel plan = planTypeRepository.findById(planTypeId)
                                                    .orElseThrow(() -> new IllegalArgumentException("Plan inválido"));
 
-            int durationValue;
-            DurationUnit durationUnit;
-            if (planTypeId == 1L || planTypeId == 2L) {
-                durationValue = 1;
-                durationUnit = DurationUnit.MONTH;
-            } else if (planTypeId == 3L || planTypeId == 4L) {
-                durationValue = 12;
-                durationUnit = DurationUnit.MONTH;
-            } else {
-                durationValue = 1;
-                durationUnit = DurationUnit.MONTH;
-            }
-
             SubscriptionModel subscription = new SubscriptionModel();
             subscription.setUser(userOpt.get());
             subscription.setPlanType(plan);
             subscription.setStartDate(LocalDate.now());
-            subscription.setDurationValue(durationValue);
-            subscription.setDurationUnit(durationUnit);
+            subscription.setDurationValue(1);
+            subscription.setDurationUnit(DurationUnit.MONTH);
 
             subscriptionRepository.save(subscription);
 
-            // Redirigir al frontend
-            URI redirectUri = URI.create(FRONTEND_REDIRECT_URL);
-            HttpHeaders redirectHeaders = new HttpHeaders();
-            redirectHeaders.setLocation(redirectUri);
-            return new ResponseEntity<>(redirectHeaders, HttpStatus.FOUND);
+            return ResponseEntity.ok("Subscripción activada correctamente");
 
         } catch (Exception e) {
             log.error("Error capturando orden PayPal", e);
@@ -232,3 +209,4 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         }
     }
 }
+

@@ -1,5 +1,7 @@
 package com.ms_fisio.dashboard.dto;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,14 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChartDto {
-    
+    private Map<Integer, Map<Integer, Long>> data;
+    private String title;
     private String type;
-    private String source;
-    private Integer year;
-    
-    // Constructor for charts without year (e.g., barras type)
-    public ChartDto(String type, String source) {
-        this.type = type;
-        this.source = source;
-    }
 }

@@ -3,6 +3,7 @@ package com.ms_fisio.session.service;
 import com.ms_fisio.session.domain.dto.*;
 import com.ms_fisio.session.domain.model.*;
 import com.ms_fisio.session.repository.*;
+import com.ms_fisio.dashboard.dto.OngoingSessionDTO;
 import com.ms_fisio.routine.dto.RoutineSummaryDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Service for session operations
@@ -198,5 +202,66 @@ public class SessionService {
                         103L,
                         "Balance Training",
                         sessionId));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Integer, Map<Integer, Long>> getPlannedSessionsByStartDate(Long userId) {
+        return getSessionChartGroupedByDate(
+            "planned",
+            routineSessionRepository.countPlannedSessionsByStartDate(userId)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Integer, Map<Integer, Long>> getExecutedSessionsByStartDate(Long userId) {
+        LocalDateTime now = LocalDateTime.now();
+        return getSessionChartGroupedByDate(
+            "executed",
+            routineSessionRepository.countExecutedSessionsByStartDate(userId, now)
+        );
+    }
+
+    private Map<Integer, Map<Integer, Long>> getSessionChartGroupedByDate(String type, List<SessionChartDTO> data) {
+        log.info("Fetching {} sessions grouped by year and month", type);
+
+        return data.stream().collect(
+            LinkedHashMap::new,
+            (map, dto) -> map
+                .computeIfAbsent(dto.getYear(), y -> new LinkedHashMap<>())
+                .put(dto.getMonth(), dto.getCount()),
+            LinkedHashMap::putAll
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Integer, Map<Integer, Long>> getFeedbackSentimentStats(Long userId) {
+        List<BarChartDTO> results = feedbackRepository.countFeedbackBySentiment(userId);
+
+        // Convertimos la lista a Map<calification, count>
+        Map<Integer, Long> sentimentMap = results.stream()
+            .collect(Collectors.toMap(
+                BarChartDTO::getCalification, // sentimiento como 1, 2, 3
+                BarChartDTO::getCount,
+                Long::sum,
+                LinkedHashMap::new
+            ));
+
+        // Lo retornamos dentro de otro Map con clave fija, como hacen otros charts
+        Map<Integer, Map<Integer, Long>> result = new LinkedHashMap<>();
+        result.put(0, sentimentMap);
+
+        return result;
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public List<OngoingSessionDTO> findOngoingSessionsByCreator(Long userId) {
+        return routineSessionRepository.findOngoingSessionsByCreator(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FeedbackCommentaryDTO> getCommentsByRoutineCreator(Long userId) {
+        return feedbackRepository.findCommentsByRoutineCreator(userId);
     }
 }

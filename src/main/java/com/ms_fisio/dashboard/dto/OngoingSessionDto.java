@@ -10,10 +10,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OngoingSessionDto {
+public class OngoingSessionDTO {
     
-    private String chuecoName;
-    private String chuecoPfpUrl;
+    private String patientName;
+    private String patientPfpUrl;
     private String routineName;
-    private String routineId;
+    private Long routineId;
 }
