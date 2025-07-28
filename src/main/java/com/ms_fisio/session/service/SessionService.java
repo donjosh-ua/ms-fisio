@@ -233,31 +233,35 @@ public class SessionService {
         );
     }
 
-    // @Transactional(readOnly = true)
-    // public Map<Integer, Map<Integer, Long>> getFeedbackSentimentStats(Long userId) {
-    //     log.info("Fetching feedback sentiment stats for user {}", userId);
+    @Transactional(readOnly = true)
+    public Map<Integer, Map<Integer, Long>> getFeedbackSentimentStats(Long userId) {
+        List<BarChartDTO> results = feedbackRepository.countFeedbackBySentiment(userId);
 
-    //     // Obtener los datos
-    //     List<SessionChartDTO> results = feedbackRepository.countFeedbackBySentiment(userId);
+        // Convertimos la lista a Map<calification, count>
+        Map<Integer, Long> sentimentMap = results.stream()
+            .collect(Collectors.toMap(
+                BarChartDTO::getCalification, // sentimiento como 1, 2, 3
+                BarChartDTO::getCount,
+                Long::sum,
+                LinkedHashMap::new
+            ));
 
-    //     // Crear el mapa interno: <sentiment (1, 2, 3), count>
-    //     Map<Integer, Long> sentimentMap = results.stream()
-    //         .collect(Collectors.toMap(
-    //             SessionChartDTO::getMonth, // Aquí el "month" representa el sentiment (1, 2, 3)
-    //             SessionChartDTO::getCount,
-    //             (a, b) -> b,
-    //             LinkedHashMap::new
-    //         ));
+        // Lo retornamos dentro de otro Map con clave fija, como hacen otros charts
+        Map<Integer, Map<Integer, Long>> result = new LinkedHashMap<>();
+        result.put(0, sentimentMap);
 
-    //     // Crear el mapa externo con clave fija "0"
-    //     Map<Integer, Map<Integer, Long>> result = new LinkedHashMap<>();
-    //     result.put(0, sentimentMap);
+        return result;
+    }
 
-    //     return result;
-    // }
+
 
     @Transactional(readOnly = true)
     public List<OngoingSessionDTO> findOngoingSessionsByCreator(Long userId) {
         return routineSessionRepository.findOngoingSessionsByCreator(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FeedbackCommentaryDTO> getCommentsByRoutineCreator(Long userId) {
+        return feedbackRepository.findCommentsByRoutineCreator(userId);
     }
 }
